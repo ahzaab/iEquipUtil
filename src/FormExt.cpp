@@ -135,7 +135,7 @@ namespace FormExt
 	}
 
 
-	template <aSetting<Form*>& arr>
+	template <aSetting<TESForm*>& arr>
 	bool IsT(TESForm* a_form)
 	{
 		if (!a_form) {
@@ -143,7 +143,7 @@ namespace FormExt
 			return false;
 		}
 
-		return arr.find(a_form->formID);
+		return arr.find(a_form->formID) != arr.end();
 	}
 
 

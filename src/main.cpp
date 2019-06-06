@@ -165,8 +165,13 @@ namespace
 	void MessageHandler(SKSEMessagingInterface::Message* a_msg)
 	{
 		switch (a_msg->type) {
-		case SKSEMessagingInterface::kMessage_InputLoaded:
+		case SKSEMessagingInterface::kMessage_DataLoaded:
 			{
+				if (Settings::loadSettings()) {
+					_MESSAGE("[MESSAGE] Settings loaded successfully");
+				} else {
+					_FATALERROR("[FATAL ERROR] Settings failed to load!\n");
+				}
 #if _WIN64
 				auto eventDispatcherList = reinterpret_cast<RE::EventDispatcherList*>(GetEventDispatcherList());
 				eventDispatcherList->equipEventSource.AddEventSink(Events::EquipEventHandler::GetSingleton());
@@ -216,13 +221,6 @@ extern "C" {
 		_MESSAGE("[MESSAGE] %s loaded", NAME);
 
 		if (!SKSE::Init(a_skse)) {
-			return false;
-		}
-
-		if (Settings::loadSettings()) {
-			_MESSAGE("[MESSAGE] Settings loaded successfully");
-		} else {
-			_FATALERROR("[FATAL ERROR] Settings failed to load!\n");
 			return false;
 		}
 

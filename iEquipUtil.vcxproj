@@ -15,18 +15,18 @@
     <ProjectGuid>{811DE627-8F4E-4C7E-B5EA-9CF4D0D0D03E}</ProjectGuid>
     <RootNamespace>iEquipUtil</RootNamespace>
     <Keyword>Win32Proj</Keyword>
-    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
     <WholeProgramOptimization>true</WholeProgramOptimization>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
@@ -140,7 +140,6 @@
     <ClCompile Include="src\AmmoExt.cpp" />
     <ClCompile Include="src\Events.cpp" />
     <ClCompile Include="src\ExtraLocator.cpp" />
-    <ClCompile Include="src\Forms.cpp" />
     <ClCompile Include="src\FormExt.cpp" />
     <ClCompile Include="src\Hooks.cpp" />
     <ClCompile Include="src\InventoryExt.cpp" />
@@ -163,9 +162,6 @@
     <ProjectReference Include="..\..\common\common_vc14.vcxproj">
       <Project>{472e19ab-def0-42df-819b-18722e8dc822}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\Json2Settings\Json2Settings.vcxproj">
-      <Project>{61c39244-9610-428f-9066-18fad0bc3990}</Project>
-    </ProjectReference>
     <ProjectReference Include="..\skse64\skse64.vcxproj">
       <Project>{7028b79c-06e3-4d9a-b38c-1dc3680b1bdb}</Project>
     </ProjectReference>
@@ -177,7 +173,7 @@
     <ClInclude Include="include\ActorExt.h" />
     <ClInclude Include="include\ActorExtLib.h" />
     <ClInclude Include="include\AmmoExt.h" />
-    <ClInclude Include="include\function_view.h" />
+    <ClInclude Include="include\function_ref.h" />
     <ClInclude Include="include\Hooks.h" />
     <ClInclude Include="include\Events.h" />
     <ClInclude Include="include\ExtraLocator.h" />

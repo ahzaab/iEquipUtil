@@ -57,6 +57,7 @@ Event OnPageReset(String a_page)
 		AddTextOptionST("InventoryExt_GetRefHandleAtInvIndex_T", "GetRefHandleAtInvIndex", "")
 		AddTextOptionST("InventoryExt_GetRefHandleFromWornObject_T", "GetRefHandleFromWornObject", "")
 		AddTextOptionST("MyClass_HelloWorld_T", "Hello world", "")
+		AddTextOptionST("MyClass_IsX_T", "Test IsX function", "")
 		SetCursorPosition(1)
 		AddSliderOptionST("SoulSeeker_FillMethod_S", "Fill Method:", SoulSeeker_FillMethod.GetValue() As Float)
 		AddToggleOptionST("SoulSeeker_PartialFill_B", "Partial Fill:", SoulSeeker_PartialFill.GetValue() As Bool)
@@ -242,10 +243,40 @@ EndState
 
 State MyClass_HelloWorld_T
 	Event OnSelectST()
-	ConsoleUtil.SetSelectedReference(PlayerRef)
-	Debug.Trace("SoulSeekerDBG: SetSelectedReference")
-	ConsoleUtil.ExecuteCommand("setav health 1000")
-	Debug.Trace("SoulSeekerDBG: ExecuteCommand")
+		ConsoleUtil.SetSelectedReference(PlayerRef)
+		Debug.Trace("SoulSeekerDBG: SetSelectedReference")
+		ConsoleUtil.ExecuteCommand("setav health 1000")
+		Debug.Trace("SoulSeekerDBG: ExecuteCommand")
+	EndEvent
+
+	Event OnDefaultST()
+	EndEvent
+
+	Event OnHighlightST()
+	EndEvent
+EndState
+
+
+State MyClass_IsX_T
+	Event OnSelectST()
+		Int formID = Game.GetModByName("ccbgssse002-exoticarrows.esl")
+		If (formID != 0xFF)
+			formID -= 0x100
+			formID = 0xFE000000 + Math.LeftShift(formID, 8 * 2)
+			formID += 0x802
+			Form theForm = Game.GetFormEx(formID)
+			If (theForm == NONE)
+				Debug.Trace("SoulSeekerDBG: Form lookup failed (formID == 0x" + iEquip_StringExt.IntToHexString(formID) + ")")
+			Else
+				If (iEquip_FormExt.HasFire(theForm))
+					Debug.Trace("SoulSeekerDBG: Form has fire")
+				Else
+					Debug.Trace("SoulSeekerDBG: Form doesn't have fire")
+				EndIf
+			EndIf
+		Else
+			Debug.Trace("SoulSeekerDBG: Could not find esl")
+		EndIf
 	EndEvent
 
 	Event OnDefaultST()

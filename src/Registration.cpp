@@ -2,6 +2,7 @@
 
 #include "GameForms.h"  // TESForm, LookupFormByID
 #include "GameObjects.h"  // TESObjectWEAP
+#include "GameRTTI.h"  // DYNAMIC_CAST
 #include "GameTypes.h"  // BSFixedString
 #include "PapyrusArgs.h"  // PackValue
 #include "PapyrusVM.h"  // VMClassRegistry, IFunctionArguments
@@ -160,7 +161,8 @@ void OnRefHandleActiveRegSet::QueueEvent(TESForm* a_baseItem, RefHandle a_refHan
 	{
 		TESForm* baseItem = LookupFormByID(baseItemFormID);
 		ForEach(EventQueueFunctor<RegParams, TESForm*, UInt32, SInt32>(_callback, baseItem, a_refHandle, a_itemCount));
-		_DMESSAGE("[DEBUG] Sent %s event", _callback.data);
+		auto fullName = DYNAMIC_CAST(baseItem, TESForm, TESFullName);
+		_DMESSAGE("[DEBUG] Sent %s event (\"%s\" %i)", _callback.data, (fullName ? fullName->name : ""), a_itemCount);
 	});
 }
 
@@ -184,7 +186,8 @@ void OnRefHandleInvalidatedRegSet::QueueEvent(TESForm* a_baseItem, RefHandle a_r
 	{
 		TESForm* baseItem = LookupFormByID(baseItemFormID);
 		ForEach(EventQueueFunctor<RegParams, TESForm*, UInt32>(_callback, baseItem, a_refHandle));
-		_DMESSAGE("[DEBUG] Sent %s event", _callback.data);
+		auto fullName = DYNAMIC_CAST(baseItem, TESForm, TESFullName);
+		_DMESSAGE("[DEBUG] Sent %s event (\"%s\")", _callback.data, (fullName ? fullName->name : ""));
 	});
 }
 

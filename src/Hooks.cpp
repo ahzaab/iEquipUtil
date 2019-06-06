@@ -52,8 +52,8 @@ namespace
 			if (a_extraList || a_count == 1) {
 				auto result = manager->InvalidateHandle(a_item, a_extraList);
 				ret = (this->*_RemoveItem)(a_dropHandle, a_item, a_count, a_removeType, a_extraList, a_moveToRef, a_arg7, a_arg8);
-				if (result.second) {
-					regs->QueueEvent(a_item, result.first);
+				if (result) {
+					regs->QueueEvent(a_item, *result);
 				}
 			} else {
 				std::size_t i = 0;
@@ -67,8 +67,8 @@ namespace
 							} else {
 								auto result = manager->InvalidateHandle(a_item, xLists.front());
 								ret = (this->*_RemoveItem)(a_dropHandle, a_item, 1, a_removeType, xLists.front(), a_moveToRef, a_arg7, a_arg8);
-								if (result.second) {
-									regs->QueueEvent(a_item, result.first);
+								if (result) {
+									regs->QueueEvent(a_item, *result);
 								}
 								++i;
 							}
@@ -99,16 +99,16 @@ namespace
 			if (a_extraList) {
 				auto result = manager->ActivateHandle(a_item, a_extraList);
 				(this->*_AddItem)(a_item, a_extraList, a_count, a_fromRefr);
-				if (result.second) {
-					regs->QueueEvent(a_item, result.first, a_count);
+				if (result) {
+					regs->QueueEvent(a_item, *result, a_count);
 				}
 			} else {
 				for (std::size_t i = 0; i < a_count; ++i) {
 					BaseExtraList* xListOut = 0;
 					auto result = manager->ActivateHandle(a_item, xListOut);
 					(this->*_AddItem)(a_item, xListOut, 1, a_fromRefr);
-					if (result.second) {
-						regs->QueueEvent(a_item, result.first, 1);
+					if (result) {
+						regs->QueueEvent(a_item, *result, 1);
 					}
 				}
 			}
@@ -128,8 +128,8 @@ namespace
 
 			(this->*_PickUpItem)(a_item, a_count, a_arg3, a_playSound);
 
-			if (result.second) {
-				OnRefHandleActiveRegSet::GetSingleton()->QueueEvent(baseform, result.first, a_count);
+			if (result) {
+				OnRefHandleActiveRegSet::GetSingleton()->QueueEvent(baseform, *result, a_count);
 			}
 		}
 

@@ -5,9 +5,8 @@
 #include <limits>  // numeric_limits
 #include <map>  // map
 #include <mutex>  // recursive_mutex, lock_guard
+#include <optional>  // optional
 #include <set>  // set
-
-#include "function_view.h"  // function_view
 
 #include "RE/EventDispatcherList.h"  // BSTEventSink
 #include "RE/TESUniqueIDChangeEvent.h"  // TESUniqueIDChangeEvent
@@ -27,7 +26,7 @@ private:
 public:
 	using UniqueID = SubType;
 	using RefHandle = SubType;
-	using HandleResult = std::pair<RefHandle, bool>;
+	using HandleResult = std::optional<RefHandle>;
 
 
 	enum { kInvalidRefHandle = static_cast<RefHandle>(-1) };
@@ -93,8 +92,6 @@ private:
 	BaseExtraList*	CreateBaseExtraList();
 	UniqueID		GetNextUniqueID();
 
-
-	static const HandleResult _NRES;
 
 	mutable std::recursive_mutex	_lock;
 	std::map<UniqueID, RefHandle>	_idToHandleMap;

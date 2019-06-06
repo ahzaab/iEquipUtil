@@ -306,8 +306,8 @@ namespace InventoryExt
 					SInt32 count = xCount ? xCount->count : 1;
 					rawCount -= count;
 					auto result = manager->ActivateHandle(entryData->type, a_extraList);
-					if (result.second) {
-						regs->QueueEvent(entryData->type, result.first, count);
+					if (result) {
+						regs->QueueEvent(entryData->type, *result, count);
 					}
 					return true;
 				});
@@ -323,8 +323,8 @@ namespace InventoryExt
 					}
 					xLists->push_front(xListOut);
 				}
-				if (result.second) {
-					regs->QueueEvent(entryData->type, result.first, 1);
+				if (result) {
+					regs->QueueEvent(entryData->type, *result, 1);
 				}
 			}
 		}

@@ -34,9 +34,6 @@
     <ClCompile Include="src\Settings.cpp">
       <Filter>src\lib</Filter>
     </ClCompile>
-    <ClCompile Include="src\Forms.cpp">
-      <Filter>src\lib</Filter>
-    </ClCompile>
     <ClCompile Include="src\LocaleManager.cpp">
       <Filter>src\lib</Filter>
     </ClCompile>
@@ -185,9 +182,6 @@
     <ClInclude Include="include\SKSEInterface.h">
       <Filter>include\lib</Filter>
     </ClInclude>
-    <ClInclude Include="include\function_view.h">
-      <Filter>include\lib</Filter>
-    </ClInclude>
     <ClInclude Include="include\RE\TESUniqueIDChangeEvent.h">
       <Filter>include\RE</Filter>
     </ClInclude>
@@ -205,6 +199,9 @@
     </ClInclude>
     <ClInclude Include="include\ObjectReferenceExt.h">
       <Filter>include\papyrus</Filter>
+    </ClInclude>
+    <ClInclude Include="include\function_ref.h">
+      <Filter>include\lib</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

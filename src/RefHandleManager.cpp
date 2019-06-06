@@ -91,12 +91,12 @@ auto RefHandleManager::ActivateHandle(TESForm* a_item, BaseExtraList*& a_extraLi
 	Locker locker(_lock);
 
 	if (!IsTrackedType(a_item)) {
-		return _NRES;
+		return std::nullopt;
 	}
 
 	RefHandle handle = GetFreeHandle();
 	if (handle == kInvalidRefHandle) {
-		return _NRES;
+		return std::nullopt;
 	}
 
 	if (!a_extraList) {
@@ -113,12 +113,12 @@ auto RefHandleManager::ActivateHandle(TESForm* a_item, BaseExtraList& a_extraLis
 	Locker locker(_lock);
 
 	if (!IsTrackedType(a_item)) {
-		return _NRES;
+		return std::nullopt;
 	}
 
 	RefHandle handle = GetFreeHandle();
 	if (handle == kInvalidRefHandle) {
-		return _NRES;
+		return std::nullopt;
 	}
 
 	return ActivateHandle(a_item, a_extraList, handle);
@@ -131,21 +131,25 @@ auto RefHandleManager::InvalidateHandle(TESForm* a_item, BaseExtraList* a_extraL
 	Locker locker(_lock);
 
 	if (!IsTrackedType(a_item)) {
-		return _NRES;
+		return std::nullopt;
 	}
 
 	auto xID = a_extraList ? static_cast<ExtraUniqueID*>(a_extraList->GetByType(kExtraData_UniqueID)) : 0;
 	if (!xID) {
-		return _NRES;
+		return std::nullopt;
 	}
 
 	auto it = _idToHandleMap.find(xID->uniqueId);
-	RefHandle handle = it->second;
-	_handleToIDMap.erase(handle);
-	_idToHandleMap.erase(it);
-	UnmarkHandle(handle);
+	if (it != _idToHandleMap.end()) {
+		RefHandle handle = it->second;
+		_handleToIDMap.erase(handle);
+		_idToHandleMap.erase(it);
+		UnmarkHandle(handle);
 
-	return { handle , true };
+		return HandleResult(handle);
+	} else {
+		return std::nullopt;
+	}
 }
 
 
@@ -257,11 +261,7 @@ auto RefHandleManager::ActivateHandle(TESForm* a_item, BaseExtraList& a_extraLis
 -> HandleResult
 {
 	auto xID = static_cast<ExtraUniqueID*>(a_extraList.GetByType(kExtraData_UniqueID));
-	if (xID) {
-		_ERROR("[ERROR] Item already has ExtraUniqueID!\n");
-		UnmarkHandle(a_handle);
-		return _NRES;
-	} else {
+	if (!xID) {
 		xID = ExtraUniqueID::Create();
 		xID->ownerFormId = kPlayerRefID;
 		xID->uniqueId = GetNextUniqueID();
@@ -270,7 +270,7 @@ auto RefHandleManager::ActivateHandle(TESForm* a_item, BaseExtraList& a_extraLis
 
 	_idToHandleMap.insert({ xID->uniqueId, a_handle });
 	_handleToIDMap.insert({ a_handle, xID->uniqueId });
-	return { a_handle, true };
+	return HandleResult(a_handle);
 }
 
 
@@ -362,6 +362,3 @@ auto RefHandleManager::GetNextUniqueID()
 	return (containerChanges->data->*func)();
 #endif
 }
-
-
-decltype(RefHandleManager::_NRES) RefHandleManager::_NRES{ kInvalidRefHandle, false };

@@ -8,19 +8,6 @@ bool Settings::loadSettings(bool a_dumpParse)
 }
 
 
-void Settings::OnLoad()
-{
-	if (settings) {
-		for (auto& setting : *settings) {
-			auto arr = dynamic_cast<aSetting<Form*>*>(setting);
-			if (arr) {
-				arr->sort();
-			}
-		}
-	}
-}
-
-
 decltype(Settings::spears)			Settings::spears("spears", false);
 decltype(Settings::javelins)		Settings::javelins("javelins", false);
 decltype(Settings::grenades)		Settings::grenades("grenades", false);
