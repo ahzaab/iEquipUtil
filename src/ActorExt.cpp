@@ -12,8 +12,6 @@
 #include <cmath>  // abs
 #include <cstdint>  // uintptr_t
 
-#include "ActorExtLib.h"  // IActorEquipItem
-#include "ExtraLocator.h"  // ExtraListLocator
 #include "InventoryUtil.h"  // ForEachInvEntry
 #include "Registration.h"  // Registration
 
@@ -268,49 +266,21 @@ namespace ActorExt
 			return 0;
 		}
 
-		ExtraContainerChanges* containerChanges = static_cast<ExtraContainerChanges*>(a_actor->extraData.GetByType(kExtraData_ContainerChanges));
-		ExtraContainerChanges::Data* containerData = containerChanges ? containerChanges->data : 0;
-		if (!containerData) {
-			_ERROR("[ERROR] No container data!\n");
-			return 0;
-		}
-
-		InventoryEntryData* entryData = 0;
-		BaseExtraList* xList = 0;
-		ExtraListLocator xListLocator(0, { kExtraData_Worn }, { });
-		for (UInt32 i = 0; i < containerData->objList->Count(); ++i) {
-			entryData = containerData->objList->GetNthItem(i);
-			if (entryData && entryData->type->IsAmmo()) {
-				xListLocator.setEntryData(entryData);
-				xList = xListLocator.found();
-				if (xList) {
-					return static_cast<TESAmmo*>(entryData->type);
-				}
+		TESAmmo* ammo = 0;
+		ForEachInvEntry(a_actor, [&](InventoryEntryData* a_entryData) -> bool
+		{
+			if (a_entryData->type->formType == kFormType_Ammo) {
+				ForEachExtraList(a_entryData, [&](BaseExtraList* a_extraList) -> bool
+				{
+					if (a_extraList->HasType(kExtraData_Worn)) {
+						ammo = static_cast<TESAmmo*>(a_entryData->type);
+					}
+					return ammo == 0;
+				});
 			}
-		}
-
-		return 0;
-	}
-
-
-	void EquipEnchantedItemEx(StaticFunctionTag*, Actor* a_actor, TESForm* a_item, SInt32 a_slotID, EnchantmentItem* a_enchantment, bool a_preventUnequip, bool a_equipSound)
-	{
-		ActorEquipEnchantedItem equipEnch(a_enchantment);
-		EquipItemEx(a_actor, a_item, a_slotID, &equipEnch, a_preventUnequip, a_equipSound);
-	}
-
-
-	void EquipPoisonedItemEx(StaticFunctionTag*, Actor* a_actor, TESForm* a_item, SInt32 a_slotID, AlchemyItem* a_poison, UInt32 a_count, bool a_preventUnequip, bool a_equipSound)
-	{
-		ActorEquipPoisonedItem equipPoison(a_poison, a_count);
-		EquipItemEx(a_actor, a_item, a_slotID, &equipPoison, a_preventUnequip, a_equipSound);
-	}
-
-
-	void EquipEnchantedAndPoisonedItemEx(StaticFunctionTag*, Actor* a_actor, TESForm* a_item, SInt32 a_slotID, EnchantmentItem* a_enchantment, AlchemyItem* a_poison, UInt32 a_count, bool a_preventUnequip, bool a_equipSound)
-	{
-		ActorEquipEnchantedAndPoisonedItem equipEnchAndPoison(a_enchantment, a_poison, a_count);
-		EquipItemEx(a_actor, a_item, a_slotID, &equipEnchAndPoison, a_preventUnequip, a_equipSound);
+			return ammo == 0;
+		});
+		return ammo;
 	}
 
 
@@ -409,15 +379,6 @@ namespace ActorExt
 	{
 		a_registry->RegisterFunction(
 			new NativeFunction1<StaticFunctionTag, TESAmmo*, Actor*>("GetEquippedAmmo", "iEquip_ActorExt", GetEquippedAmmo, a_registry));
-
-		a_registry->RegisterFunction(
-			new NativeFunction6<StaticFunctionTag, void, Actor*, TESForm*, SInt32, EnchantmentItem*, bool, bool>("EquipEnchantedItemEx", "iEquip_ActorExt", EquipEnchantedItemEx, a_registry));
-
-		a_registry->RegisterFunction(
-			new NativeFunction7<StaticFunctionTag, void, Actor*, TESForm*, SInt32, AlchemyItem*, UInt32, bool, bool>("EquipPoisonedItemEx", "iEquip_ActorExt", EquipPoisonedItemEx, a_registry));
-
-		a_registry->RegisterFunction(
-			new NativeFunction8<StaticFunctionTag, void, Actor*, TESForm*, SInt32, EnchantmentItem*, AlchemyItem*, UInt32, bool, bool>("EquipEnchantedAndPoisonedItemEx", "iEquip_ActorExt", EquipEnchantedAndPoisonedItemEx, a_registry));
 
 		a_registry->RegisterFunction(
 			new NativeFunction2<StaticFunctionTag, float, Actor*, UInt32>("GetAVDamage", "iEquip_ActorExt", GetAVDamage, a_registry));

@@ -113,7 +113,6 @@ void OnBoundWeaponEquippedRegSet::QueueEvent(UInt32 a_weaponType, UInt32 a_equip
 	SKSE::AddTask([this, a_weaponType, a_equipSlot]()
 	{
 		ForEach(EventQueueFunctor<RegParams, UInt32, UInt32>(_callback, a_weaponType, a_equipSlot));
-		_DMESSAGE("[DEBUG] Sent %s event", _callback.data);
 	});
 }
 
@@ -137,7 +136,6 @@ void OnBoundWeaponUnequippedRegSet::QueueEvent(TESObjectWEAP* a_weap, UInt32 a_e
 	{
 		TESObjectWEAP* weap = static_cast<TESObjectWEAP*>(LookupFormByID(weapFormID));
 		ForEach(EventQueueFunctor<RegParams, TESObjectWEAP*, UInt32>(_callback, weap, a_equipSlot));
-		_DMESSAGE("[DEBUG] Sent %s event", _callback.data);
 	});
 }
 
@@ -162,7 +160,6 @@ void OnRefHandleActiveRegSet::QueueEvent(TESForm* a_baseItem, RefHandle a_refHan
 		TESForm* baseItem = LookupFormByID(baseItemFormID);
 		ForEach(EventQueueFunctor<RegParams, TESForm*, UInt32, SInt32>(_callback, baseItem, a_refHandle, a_itemCount));
 		auto fullName = DYNAMIC_CAST(baseItem, TESForm, TESFullName);
-		_DMESSAGE("[DEBUG] Sent %s event (\"%s\" %i)", _callback.data, (fullName ? fullName->name : ""), a_itemCount);
 	});
 }
 
@@ -187,7 +184,6 @@ void OnRefHandleInvalidatedRegSet::QueueEvent(TESForm* a_baseItem, RefHandle a_r
 		TESForm* baseItem = LookupFormByID(baseItemFormID);
 		ForEach(EventQueueFunctor<RegParams, TESForm*, UInt32>(_callback, baseItem, a_refHandle));
 		auto fullName = DYNAMIC_CAST(baseItem, TESForm, TESFullName);
-		_DMESSAGE("[DEBUG] Sent %s event (\"%s\")", _callback.data, (fullName ? fullName->name : ""));
 	});
 }
 

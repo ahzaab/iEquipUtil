@@ -19,13 +19,7 @@
     <ClCompile Include="src\WeaponExt.cpp">
       <Filter>src\papyrus</Filter>
     </ClCompile>
-    <ClCompile Include="src\ActorExtLib.cpp">
-      <Filter>src\lib</Filter>
-    </ClCompile>
     <ClCompile Include="src\Events.cpp">
-      <Filter>src\lib</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ExtraLocator.cpp">
       <Filter>src\lib</Filter>
     </ClCompile>
     <ClCompile Include="src\Logging.cpp">
@@ -113,13 +107,7 @@
     <ClInclude Include="include\WeaponExt.h">
       <Filter>include\papyrus</Filter>
     </ClInclude>
-    <ClInclude Include="include\ActorExtLib.h">
-      <Filter>include\lib</Filter>
-    </ClInclude>
     <ClInclude Include="include\Events.h">
-      <Filter>include\lib</Filter>
-    </ClInclude>
-    <ClInclude Include="include\ExtraLocator.h">
       <Filter>include\lib</Filter>
     </ClInclude>
     <ClInclude Include="include\Utility.h">

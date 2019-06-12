@@ -7,7 +7,6 @@
 #include "PapyrusNativeFunctions.h"  // StaticFunctionTag, NativeFunction
 #include "PapyrusVM.h"  // VMClassRegistry
 
-#include "ActorExtLib.h"
 #include "Utility.h"
 
 

@@ -136,10 +136,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\ActorExt.cpp" />
-    <ClCompile Include="src\ActorExtLib.cpp" />
     <ClCompile Include="src\AmmoExt.cpp" />
     <ClCompile Include="src\Events.cpp" />
-    <ClCompile Include="src\ExtraLocator.cpp" />
     <ClCompile Include="src\FormExt.cpp" />
     <ClCompile Include="src\Hooks.cpp" />
     <ClCompile Include="src\InventoryExt.cpp" />
@@ -171,12 +169,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\ActorExt.h" />
-    <ClInclude Include="include\ActorExtLib.h" />
     <ClInclude Include="include\AmmoExt.h" />
     <ClInclude Include="include\function_ref.h" />
     <ClInclude Include="include\Hooks.h" />
     <ClInclude Include="include\Events.h" />
-    <ClInclude Include="include\ExtraLocator.h" />
     <ClInclude Include="include\Forms.h" />
     <ClInclude Include="include\FormExt.h" />
     <ClInclude Include="include\InventoryExt.h" />

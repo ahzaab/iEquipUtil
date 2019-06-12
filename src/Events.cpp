@@ -6,7 +6,6 @@
 
 #include <limits>  // numeric_limits
 
-#include "ActorExtLib.h"  // GetEquippedSlots
 #include "Registration.h"  // OnBoundWeaponEquippedRegSet, OnBoundWeaponUnequippedRegSet
 
 #include "RE/TESEquipEvent.h"  // TESEquipEvent
@@ -14,6 +13,54 @@
 
 namespace Events
 {
+	namespace
+	{
+		enum
+		{
+			kSlotID_Default = 0,
+			kSlotID_Right = 1,
+			kSlotID_Left = 2
+		};
+
+
+		UInt32 GetEquippedSlots(Actor* a_actor, TESObjectWEAP* a_weap)
+		{
+			if (!a_actor) {
+				_ERROR("[WARNING] a_actor is a NONE form!\n");
+				return kSlotID_Default;
+			} else if (!a_weap) {
+				_ERROR("[WARNING] a_weap is a NONE form!\n");
+				return kSlotID_Default;
+			}
+
+			TESForm* rightHand = a_actor->processManager->equippedObject[ActorProcessManager::kEquippedHand_Right];
+			TESForm* leftHand = a_actor->processManager->equippedObject[ActorProcessManager::kEquippedHand_Left];
+
+			UInt32 slotID = 0;
+			if (rightHand && rightHand->formID == a_weap->formID) {
+				slotID += kSlotID_Right;
+			}
+			if (leftHand && leftHand->formID == a_weap->formID) {
+				slotID += kSlotID_Left;
+			}
+			return slotID;
+		}
+
+
+		UInt32 GetUnequippedSlots(Actor* a_actor)
+		{
+			if (!a_actor) {
+				_ERROR("[WARNING] a_actor is a NONE form!\n");
+				return kSlotID_Default;
+			}
+
+			UInt32 slotID = !a_actor->processManager->equippedObject[ActorProcessManager::kEquippedHand_Right] ? kSlotID_Right : kSlotID_Default;
+			slotID += !a_actor->processManager->equippedObject[ActorProcessManager::kEquippedHand_Left] ? kSlotID_Left : kSlotID_Default;
+			return slotID;
+		}
+	}
+
+
 	EventResult EquipEventHandler::ReceiveEvent(RE::TESEquipEvent* a_event, EventDispatcher<RE::TESEquipEvent>* a_dispatcher)
 	{
 		UInt32 sourceFormID = a_event->akSource ? a_event->akSource->formID : 0;
