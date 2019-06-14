@@ -34,11 +34,9 @@
 namespace
 {
 #if _WIN64
-	constexpr std::size_t RUNTIME_VER_COMPAT = RUNTIME_VERSION_1_5_73;
 	constexpr char LOG_PATH[] = "\\My Games\\Skyrim Special Edition\\SKSE\\iEquipUtil.log";
 	constexpr char NAME[] = "iEquipUtil";
 #else
-	constexpr std::size_t RUNTIME_VER_COMPAT = RUNTIME_VERSION_1_9_32_0;
 	constexpr char LOG_PATH[] = "\\My Games\\Skyrim\\SKSE\\iEquipUtil.log";
 	constexpr char NAME[] = "iEquipUtil_LE";
 #endif
@@ -207,7 +205,17 @@ extern "C" {
 		if (a_skse->isEditor) {
 			_FATALERROR("[FATAL ERROR] Loaded in editor, marking as incompatible!\n");
 			return false;
-		} else if (a_skse->runtimeVersion != RUNTIME_VER_COMPAT) {
+		}
+
+		switch (a_skse->runtimeVersion) {
+#if _WIN64
+		case RUNTIME_VERSION_1_5_73:
+		case RUNTIME_VERSION_1_5_80:
+#else
+		case RUNTIME_VERSION_1_9_32_0:
+#endif
+			break;
+		default:
 			_FATALERROR("[FATAL ERROR] Unsupported runtime version %08X!\n", a_skse->runtimeVersion);
 			return false;
 		}
