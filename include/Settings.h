@@ -47,7 +47,12 @@ public:
 	}
 
 	virtual void dump() override
-	{}
+	{
+		_DMESSAGE("== %s ==", _key.c_str());
+		for (auto& elem : *this) {
+			_DMESSAGE("[0x%08X]", elem.first);
+		}
+	}
 
 	virtual std::string	getValueAsString() const override
 	{
@@ -79,5 +84,6 @@ public:
 	static aSetting<TESForm*> bandages;
 
 private:
-	static constexpr char FILE_NAME[] = "Data\\SKSE\\Plugins\\iEquip.json";
+	static constexpr char FILE_PREFIX[] = "Data\\SKSE\\Plugins\\";
+	static constexpr char FILE_PATTERN[] = "iEquip_*.json";
 };

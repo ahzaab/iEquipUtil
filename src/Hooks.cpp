@@ -137,7 +137,7 @@ namespace
 		static void InstallHooks()
 		{
 #if _WIN64
-			constexpr std::uintptr_t PLAYER_CHARACTER_VTBL = 0x016635F0;	// 1_5_73
+			constexpr std::uintptr_t PLAYER_CHARACTER_VTBL = 0x016635F0;	// 1_5_80
 #else
 			constexpr std::uintptr_t PLAYER_CHARACTER_VTBL = 0x010D201C;
 #endif

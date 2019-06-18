@@ -1,10 +1,30 @@
 #include "Settings.h"
 
+#include <fileapi.h>  // FindFirstFile, FindNextFile
+
+#include <cstring>  // memset
+#include <string>  // string
+
 
 bool Settings::loadSettings(bool a_dumpParse)
 {
-	Json2Settings::Settings::setFileName(FILE_NAME);
-	return Json2Settings::Settings::loadSettings(a_dumpParse);
+	bool result = true;
+
+	std::string fileName(FILE_PREFIX);
+	fileName += FILE_PATTERN;
+	WIN32_FIND_DATA findData;
+	std::memset(&findData, 0, sizeof(findData));
+	auto handle = FindFirstFile(fileName.c_str(), &findData);
+	if (handle != INVALID_HANDLE_VALUE) {
+		do {
+			fileName = FILE_PREFIX;
+			fileName += findData.cFileName;
+			result = Json2Settings::Settings::loadSettings(fileName.c_str(), true, a_dumpParse);
+		} while (result && FindNextFile(handle, &findData));
+		FindClose(handle);
+	}
+
+	return result;
 }
 
 
