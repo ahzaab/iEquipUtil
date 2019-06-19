@@ -43,19 +43,20 @@ public:
 	};
 
 
-	static RefHandleManager* GetSingleton();
+	static RefHandleManager*	GetSingleton();
+	static void					AddExtraData(BaseExtraList* a_extraList, BSExtraData* a_extraData);
 
-	void			Clear() noexcept;
-	bool			Save(SKSESerializationInterface* a_intfc, UInt32 a_type, UInt32 a_version);
-	bool			Load(SKSESerializationInterface* a_intfc, UInt32 a_version);
-	HandleResult	ActivateHandle(TESForm* a_item, BaseExtraList*& a_extraList);
-	HandleResult	ActivateHandle(TESForm* a_item, BaseExtraList& a_extraList);
-	HandleResult	InvalidateHandle(TESForm* a_item, BaseExtraList* a_extraList);
-	EntryData		LookupEntry(TESForm* a_form, RefHandle a_handle);
-	RefHandle		LookupHandle(UniqueID a_uniqueID);
-	bool			IsTrackedType(TESForm* a_form);
-	bool			IsInit() const;
-	void			SetInit();
+	void						Clear() noexcept;
+	bool						Save(SKSESerializationInterface* a_intfc, UInt32 a_type, UInt32 a_version);
+	bool						Load(SKSESerializationInterface* a_intfc, UInt32 a_version);
+	HandleResult				ActivateHandle(TESForm* a_item, BaseExtraList*& a_extraList);
+	HandleResult				ActivateHandle(TESForm* a_item, BaseExtraList& a_extraList);
+	HandleResult				InvalidateHandle(TESForm* a_item, BaseExtraList* a_extraList);
+	std::optional<EntryData>	LookupEntry(TESForm* a_form, RefHandle a_handle);
+	RefHandle					LookupHandle(UniqueID a_uniqueID);
+	bool						IsTrackedType(TESForm* a_form);
+	bool						IsInit() const;
+	void						SetInit();
 
 private:
 	using Locker = std::lock_guard<std::recursive_mutex>;
@@ -88,7 +89,6 @@ private:
 	RefHandle		GetFreeHandle();
 	void			MarkHandle(RefHandle a_handle);
 	void			UnmarkHandle(RefHandle a_handle);
-	void			AddExtraData(BaseExtraList* a_extraList, BSExtraData* a_extraData);
 	BaseExtraList*	CreateBaseExtraList();
 	UniqueID		GetNextUniqueID();
 

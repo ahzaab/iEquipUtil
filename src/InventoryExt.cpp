@@ -78,17 +78,14 @@ namespace InventoryExt
 		};
 
 
-		bool LookupEntry(TESForm* a_item, UInt32 a_refHandle, EntryData& a_entryDataOut)
+		std::optional<EntryData> LookupEntry(TESForm* a_item, UInt32 a_refHandle)
 		{
 			auto manager = RefHandleManager::GetSingleton();
 			auto result = manager->LookupEntry(a_item, a_refHandle);
-			if (!result.invEntryData || !result.extraList) {
+			if (!result) {
 				_ERROR("[ERROR] Failed to find item!\n");
-				return false;
-			} else {
-				a_entryDataOut = result;
-				return true;
 			}
+			return result;
 		}
 
 
@@ -444,14 +441,13 @@ namespace InventoryExt
 			return "";
 		}
 
-		EntryData entryData;
-		bool result = LookupEntry(a_item, a_refHandle, entryData);
-		if (!result) {
+		auto entryData = LookupEntry(a_item, a_refHandle);
+		if (!entryData) {
 			return "";
 		}
 
-		entryData.extraList->GetDisplayName(a_item);
-		auto xText = static_cast<RE::ExtraTextDisplayData*>(entryData.extraList->GetByType(kExtraData_TextDisplayData));
+		entryData->extraList->GetDisplayName(a_item);
+		auto xText = static_cast<RE::ExtraTextDisplayData*>(entryData->extraList->GetByType(kExtraData_TextDisplayData));
 		if (xText) {
 			return xText->name;
 		} else {
@@ -468,14 +464,13 @@ namespace InventoryExt
 			return "";
 		}
 
-		EntryData entryData;
-		bool result = LookupEntry(a_item, a_refHandle, entryData);
-		if (!result) {
+		auto entryData = LookupEntry(a_item, a_refHandle);
+		if (!entryData) {
 			return "";
 		}
 
-		entryData.extraList->GetDisplayName(a_item);
-		auto xText = static_cast<RE::ExtraTextDisplayData*>(entryData.extraList->GetByType(kExtraData_TextDisplayData));
+		entryData->extraList->GetDisplayName(a_item);
+		auto xText = static_cast<RE::ExtraTextDisplayData*>(entryData->extraList->GetByType(kExtraData_TextDisplayData));
 		if (xText && xText->type == -2) {
 			std::string name(xText->name.data, xText->rawNameLen);
 			return name.c_str();
@@ -496,13 +491,12 @@ namespace InventoryExt
 			return 0;
 		}
 
-		EntryData entryData;
-		bool result = LookupEntry(a_item, a_refHandle, entryData);
-		if (!result) {
+		auto entryData = LookupEntry(a_item, a_refHandle);
+		if (!entryData) {
 			return 0;
 		}
 
-		auto xPoison = static_cast<RE::ExtraPoison*>(entryData.extraList->GetByType(kExtraData_Poison));
+		auto xPoison = static_cast<RE::ExtraPoison*>(entryData->extraList->GetByType(kExtraData_Poison));
 		return xPoison ? xPoison->poison : 0;
 	}
 
@@ -523,16 +517,15 @@ namespace InventoryExt
 			return;
 		}
 
-		EntryData entryData;
-		bool result = LookupEntry(a_item, a_refHandle, entryData);
-		if (!result) {
+		auto entryData = LookupEntry(a_item, a_refHandle);
+		if (!entryData) {
 			return;
 		}
 
-		auto xPoison = static_cast<RE::ExtraPoison*>(entryData.extraList->GetByType(kExtraData_Poison));
+		auto xPoison = static_cast<RE::ExtraPoison*>(entryData->extraList->GetByType(kExtraData_Poison));
 		if (!xPoison) {
 			xPoison = RE::ExtraPoison::Create();
-			entryData.extraList->Add(kExtraData_Poison, xPoison);
+			RefHandleManager::AddExtraData(entryData->extraList, xPoison);
 		}
 		xPoison->poison = a_newPoison;
 		xPoison->count = a_newCount;
@@ -549,15 +542,14 @@ namespace InventoryExt
 			return;
 		}
 
-		EntryData entryData;
-		bool result = LookupEntry(a_item, a_refHandle, entryData);
-		if (!result) {
+		auto entryData = LookupEntry(a_item, a_refHandle);
+		if (!entryData) {
 			return;
 		}
 
-		auto xPoison = static_cast<RE::ExtraPoison*>(entryData.extraList->GetByType(kExtraData_Poison));
+		auto xPoison = static_cast<RE::ExtraPoison*>(entryData->extraList->GetByType(kExtraData_Poison));
 		if (xPoison) {
-			entryData.extraList->Remove(kExtraData_Poison, xPoison);
+			entryData->extraList->Remove(kExtraData_Poison, xPoison);
 			delete xPoison;
 		}
 	}
@@ -573,13 +565,12 @@ namespace InventoryExt
 			return 0;
 		}
 
-		EntryData entryData;
-		bool result = LookupEntry(a_item, a_refHandle, entryData);
-		if (!result) {
+		auto entryData = LookupEntry(a_item, a_refHandle);
+		if (!entryData) {
 			return 0;
 		}
 
-		auto xPoison = static_cast<RE::ExtraPoison*>(entryData.extraList->GetByType(kExtraData_Poison));
+		auto xPoison = static_cast<RE::ExtraPoison*>(entryData->extraList->GetByType(kExtraData_Poison));
 		return xPoison ? xPoison->count : 0;
 	}
 
@@ -594,13 +585,12 @@ namespace InventoryExt
 			return;
 		}
 
-		EntryData entryData;
-		bool result = LookupEntry(a_item, a_refHandle, entryData);
-		if (!result) {
+		auto entryData = LookupEntry(a_item, a_refHandle);
+		if (!entryData) {
 			return;
 		}
 
-		auto xPoison = static_cast<RE::ExtraPoison*>(entryData.extraList->GetByType(kExtraData_Poison));
+		auto xPoison = static_cast<RE::ExtraPoison*>(entryData->extraList->GetByType(kExtraData_Poison));
 		if (xPoison) {
 			xPoison->count = a_newCount;
 		}
@@ -614,9 +604,8 @@ namespace InventoryExt
 			return false;
 		}
 
-		EntryData entryData;
-		bool result = LookupEntry(a_item, a_refHandle, entryData);
-		if (!result) {
+		auto entryData = LookupEntry(a_item, a_refHandle);
+		if (!entryData) {
 			return 0;
 		}
 
@@ -624,7 +613,7 @@ namespace InventoryExt
 		if (enchForm && enchForm->enchantment) {
 			return enchForm->enchantment;
 		} else {
-			auto xEnch = static_cast<ExtraEnchantment*>(entryData.extraList->GetByType(kExtraData_Enchantment));
+			auto xEnch = static_cast<ExtraEnchantment*>(entryData->extraList->GetByType(kExtraData_Enchantment));
 			return xEnch ? xEnch->enchant : 0;
 		}
 	}
@@ -637,25 +626,24 @@ namespace InventoryExt
 			return;
 		}
 
-		EntryData entryData;
-		bool result = LookupEntry(a_item, a_refHandle, entryData);
-		if (!result) {
+		auto entryData = LookupEntry(a_item, a_refHandle);
+		if (!entryData) {
 			return;
 		}
 
 		bool worn = false;
 		bool wornLeft = false;
 		SInt32 count = 1;
-		if (entryData.extraList) {
-			auto xCount = static_cast<ExtraCount*>(entryData.extraList->GetByType(kExtraData_Count));
+		if (entryData->extraList) {
+			auto xCount = static_cast<ExtraCount*>(entryData->extraList->GetByType(kExtraData_Count));
 			if (xCount) {
 				count = xCount->count;
 			}
 
-			auto xWorn = static_cast<ExtraWorn*>(entryData.extraList->GetByType(kExtraData_Worn));
+			auto xWorn = static_cast<ExtraWorn*>(entryData->extraList->GetByType(kExtraData_Worn));
 			worn = xWorn != 0;
 
-			auto xWornLeft = static_cast<ExtraWornLeft*>(entryData.extraList->GetByType(kExtraData_WornLeft));
+			auto xWornLeft = static_cast<ExtraWornLeft*>(entryData->extraList->GetByType(kExtraData_WornLeft));
 			wornLeft = xWornLeft != 0;
 		}
 
@@ -677,7 +665,7 @@ namespace InventoryExt
 			extraList = 0;
 		} else {
 			equipCount = 1;
-			extraList = entryData.extraList;
+			extraList = entryData->extraList;
 		}
 
 		EquipManager* equipManager = EquipManager::GetSingleton();

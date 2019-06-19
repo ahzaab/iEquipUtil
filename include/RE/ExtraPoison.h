@@ -23,7 +23,8 @@ namespace RE
 		inline static ExtraPoison* Create()
 		{
 #if _WIN64
-			RelocAddr<std::uintptr_t> vtbl(0x015464C0);
+			RelocAddr<std::uintptr_t> relVtbl(0x0152C470);	// 1_5_80
+			std::uintptr_t vtbl = relVtbl.GetUIntPtr();
 #else
 			std::uintptr_t vtbl = 0x01079308;
 #endif

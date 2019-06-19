@@ -25,6 +25,26 @@ RefHandleManager* RefHandleManager::GetSingleton()
 }
 
 
+void RefHandleManager::AddExtraData(BaseExtraList* a_extraList, BSExtraData* a_extraData)
+{
+#if _WIN64
+	using func_t = BSExtraData*(BaseExtraList*, BSExtraData*);
+	// E8 ? ? ? ? 4C 8D 75 10
+	RelocAddr<func_t*> func(0x00131990);	// 1_5_80
+	func(a_extraList, a_extraData);
+#else
+	using func_t = BSExtraData*(BaseExtraList::*)(BSExtraData*);
+	union
+	{
+		std::uintptr_t addr;
+		func_t func;
+	};
+	addr = 0x0040A790;
+	(a_extraList->*func)(a_extraData);
+#endif
+}
+
+
 void RefHandleManager::Clear() noexcept
 {
 	Locker locker(_lock);
@@ -154,22 +174,22 @@ auto RefHandleManager::InvalidateHandle(TESForm* a_item, BaseExtraList* a_extraL
 
 
 auto RefHandleManager::LookupEntry(TESForm* a_form, RefHandle a_handle)
--> EntryData
+-> std::optional<EntryData>
 {
 	Locker locker(_lock);
 
-	EntryData entryData;
 	if (a_handle > kLargestHandle || a_handle == kInvalidRefHandle) {
 		_ERROR("[ERROR] Ref handle is invalid!\n");
-		return entryData;
+		return std::nullopt;
 	}
 
 	auto it = _handleToIDMap.find(a_handle);
 	if (it == _handleToIDMap.end()) {
 		_ERROR("[ERROR] handle not found in map!\n");
-		return entryData;
+		return std::nullopt;
 	}
 
+	std::optional<EntryData> result;
 	ForEachInvEntry([&](InventoryEntryData* a_invEntryData) -> bool
 	{
 		if (a_invEntryData->type->formID == a_form->formID) {
@@ -177,16 +197,15 @@ auto RefHandleManager::LookupEntry(TESForm* a_form, RefHandle a_handle)
 			{
 				auto xID = static_cast<ExtraUniqueID*>(a_extraList->GetByType(kExtraData_UniqueID));
 				if (xID && xID->uniqueId == it->second) {
-					entryData.invEntryData = a_invEntryData;
-					entryData.extraList = a_extraList;
+					result.emplace(a_invEntryData, a_extraList);
 				}
-				return entryData.invEntryData == 0;
+				return !result.has_value();
 			});
 		}
-		return entryData.invEntryData == 0;
+		return !result.has_value();
 	});
 
-	return entryData;
+	return result;
 }
 
 
@@ -310,26 +329,6 @@ void RefHandleManager::UnmarkHandle(RefHandle a_handle)
 }
 
 
-void RefHandleManager::AddExtraData(BaseExtraList* a_extraList, BSExtraData* a_extraData)
-{
-#if _WIN64
-	using func_t = BSExtraData * (BaseExtraList*, BSExtraData*);
-	// E8 ? ? ? ? 4C 8D 75 10
-	RelocAddr<func_t*> func(0x00131990);	// 1_5_73
-	func(a_extraList, a_extraData);
-#else
-	using func_t = BSExtraData * (BaseExtraList::*)(BSExtraData*);
-	union
-	{
-		std::uintptr_t addr;
-		func_t func;
-	};
-	addr = 0x0040A790;
-	(a_extraList->*func)(a_extraData);
-#endif
-}
-
-
 BaseExtraList* RefHandleManager::CreateBaseExtraList()
 {
 	constexpr std::size_t XLIST_SIZE = sizeof(BaseExtraList);
@@ -347,7 +346,7 @@ auto RefHandleManager::GetNextUniqueID()
 #if _WIN64
 	using func_t = UniqueID(ExtraContainerChanges::Data*);
 	// E8 ? ? ? ? 44 0F B7 F8
-	RelocAddr<func_t*> func(0x001ECD30);	// 1_5_73
+	RelocAddr<func_t*> func(0x001ECD30);	// 1_5_80
 	auto containerChanges = static_cast<ExtraContainerChanges*>((*g_thePlayer)->extraData.GetByType(kExtraData_ContainerChanges));
 	return func(containerChanges->data);
 #else
