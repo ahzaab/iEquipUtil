@@ -182,6 +182,7 @@
     <ClInclude Include="include\RE\BSTList.h" />
     <ClInclude Include="include\RE\ExtraPoison.h" />
     <ClInclude Include="include\RE\ExtraTextDisplayData.h" />
+    <ClInclude Include="include\RE\HUDMenu.h" />
     <ClInclude Include="include\RE\InventoryMenu.h" />
     <ClInclude Include="include\RE\Memory.h" />
     <ClInclude Include="include\RE\EventDispatcherList.h" />

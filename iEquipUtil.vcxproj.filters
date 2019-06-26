@@ -191,6 +191,9 @@
     <ClInclude Include="include\function_ref.h">
       <Filter>include\lib</Filter>
     </ClInclude>
+    <ClInclude Include="include\RE\HUDMenu.h">
+      <Filter>include\RE</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="version.rc" />

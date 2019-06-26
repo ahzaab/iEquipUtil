@@ -58,6 +58,8 @@ Event OnPageReset(String a_page)
 		AddTextOptionST("InventoryExt_GetRefHandleFromWornObject_T", "GetRefHandleFromWornObject", "")
 		AddTextOptionST("MyClass_HelloWorld_T", "Hello world", "")
 		AddTextOptionST("MyClass_IsX_T", "Test IsX function", "")
+		AddTextOptionST("UIExt_GetShoutFillPct_T", "Test GetShoutFillPct", "")
+		AddTextOptionST("UIExt_GetShoutCooldownTime_T", "Test GetShoutCooldownTime", "")
 		SetCursorPosition(1)
 		AddSliderOptionST("SoulSeeker_FillMethod_S", "Fill Method:", SoulSeeker_FillMethod.GetValue() As Float)
 		AddToggleOptionST("SoulSeeker_PartialFill_B", "Partial Fill:", SoulSeeker_PartialFill.GetValue() As Bool)
@@ -277,6 +279,34 @@ State MyClass_IsX_T
 		Else
 			Debug.Trace("SoulSeekerDBG: Could not find esl")
 		EndIf
+	EndEvent
+
+	Event OnDefaultST()
+	EndEvent
+
+	Event OnHighlightST()
+	EndEvent
+EndState
+
+
+State UIExt_GetShoutFillPct_T
+	Event OnSelectST()
+		Float result = iEquip_UIExt.GetShoutFillPct()
+		Debug.Trace("SoulSeekerDBG: GetShoutFillPct == " + result)
+	EndEvent
+
+	Event OnDefaultST()
+	EndEvent
+
+	Event OnHighlightST()
+	EndEvent
+EndState
+
+
+State UIExt_GetShoutCooldownTime_T
+	Event OnSelectST()
+		Float result = iEquip_UIExt.GetShoutCooldownTime()
+		Debug.Trace("SoulSeekerDBG: GetShoutCooldownTime == " + result)
 	EndEvent
 
 	Event OnDefaultST()

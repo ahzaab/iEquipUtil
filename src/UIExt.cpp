@@ -9,6 +9,7 @@
 #include "GameMenus.h"  // IMenu, MenuManager, UIStringHolder
 
 #include "RE/BSTList.h"  // BSSimpleList
+#include "RE/HUDMenu.h"  // HUDMenu
 #include "RE/InventoryMenu.h"  // InventoryMenu
 
 #if _WIN64
@@ -42,10 +43,42 @@ namespace UIExt
 	}
 
 
+	float GetShoutFillPct(StaticFunctionTag*)
+	{
+		auto mm = MenuManager::GetSingleton();
+		auto uiStrHolder = UIStringHolder::GetSingleton();
+		auto hud = static_cast<RE::HUDMenu*>(mm->GetMenu(&uiStrHolder->hudMenu));
+		if (!hud || !hud->shout) {
+			return 100.0;
+		} else {
+			return hud->shout->fillPct;
+		}
+	}
+
+
+	float GetShoutCooldownTime(StaticFunctionTag*)
+	{
+		auto mm = MenuManager::GetSingleton();
+		auto uiStrHolder = UIStringHolder::GetSingleton();
+		auto hud = static_cast<RE::HUDMenu*>(mm->GetMenu(&uiStrHolder->hudMenu));
+		if (!hud || !hud->shout) {
+			return 0.0;
+		} else {
+			return hud->shout->cooldown;
+		}
+	}
+
+
 	bool RegisterFuncs(VMClassRegistry* a_registry)
 	{
 		a_registry->RegisterFunction(
 			new NativeFunction1<StaticFunctionTag, TESForm*, UInt32>("GetFormAtInventoryIndex", "iEquip_UIExt", GetFormAtInventoryIndex, a_registry));
+
+		a_registry->RegisterFunction(
+			new NativeFunction0<StaticFunctionTag, float>("GetShoutFillPct", "iEquip_UIExt", GetShoutFillPct, a_registry));
+
+		a_registry->RegisterFunction(
+			new NativeFunction0<StaticFunctionTag, float>("GetShoutCooldownTime", "iEquip_UIExt", GetShoutCooldownTime, a_registry));
 
 		return true;
 	}
