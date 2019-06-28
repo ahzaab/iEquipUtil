@@ -168,7 +168,7 @@ namespace
 				if (Settings::loadSettings()) {
 					_MESSAGE("[MESSAGE] Settings loaded successfully");
 				} else {
-					_FATALERROR("[FATAL ERROR] Settings failed to load!\n");
+					_ERROR("[ERROR] Encountered error while loading settings!\n");
 				}
 #if _WIN64
 				auto eventDispatcherList = reinterpret_cast<RE::EventDispatcherList*>(GetEventDispatcherList());

@@ -19,7 +19,9 @@ bool Settings::loadSettings(bool a_dumpParse)
 		do {
 			fileName = FILE_PREFIX;
 			fileName += findData.cFileName;
-			result = Json2Settings::Settings::loadSettings(fileName.c_str(), true, a_dumpParse);
+			if (!Json2Settings::Settings::loadSettings(fileName.c_str(), true, a_dumpParse)) {
+				result = false;
+			}
 		} while (result && FindNextFile(handle, &findData));
 		FindClose(handle);
 	}
