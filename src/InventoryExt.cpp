@@ -681,14 +681,14 @@ namespace InventoryExt
 			}
 
 			Actor* actor = 0;
+			UInt32 refHandle = actorHandle;	// dumb semantics
+
 #if _WIN64
 			NiPointer<TESObjectREFR> refrOut;
-			UInt32 refHandle = actorHandle;	// dumb semantics
 			LookupREFRByHandle(refHandle, refrOut);
 			actor = static_cast<Actor*>(refrOut.get());
 #else
 			TESObjectREFR* refrOut;
-			UInt32 refHandle = actorHandle;
 			LookupREFRByHandle(&refHandle, &refrOut);
 			actor = static_cast<Actor*>(refrOut);
 #endif
@@ -743,7 +743,7 @@ namespace InventoryExt
 			EquipManager* equipManager = EquipManager::GetSingleton();
 			CALL_MEMBER_FN(equipManager, EquipItem)(actor, item, extraList, equipCount, slot, a_equipSound, a_preventUnequip, false, 0);
 
-#if _WIN32
+#ifndef _WIN64
 			actor->handleRefObject.DecRef();
 #endif
 		});
