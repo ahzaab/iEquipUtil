@@ -6,6 +6,7 @@
 
 #include "Registration.h"  // OnBoundWeaponEquippedRegSet, OnBoundWeaponUnequippedRegSet
 #include "Settings.h"  // Settings
+#include "SKSEInterface.h"
 
 
 namespace FormExt
@@ -114,24 +115,17 @@ namespace FormExt
 			return;
 		}
 
-		auto light = static_cast<TESObjectLIGH*>(a_light);
-		GetLightRadius(light) = a_radius;
-	}
+		UInt32 lightID = a_light->formID;
+		SKSE::AddTask([lightID, a_radius]()
+		{
+			auto light = static_cast<TESObjectLIGH*>(LookupFormByID(lightID));
+			if (!light) {
+				_WARNING("[WARNING] Failed to lookup light by id!");
+				return;
+			}
 
-
-	void ResetLightRadius(StaticFunctionTag*, TESForm* a_light)
-	{
-		if (!a_light) {
-			_WARNING("[WARNING] a_light is a NONE form!");
-			return;
-		} else if (a_light->formType != kFormType_Light) {
-			_WARNING("[WARNING] a_light is a not a light!");
-			return;
-		}
-
-		auto origLight = static_cast<TESObjectLIGH*>(LookupFormByID(a_light->formID));
-		auto light = static_cast<TESObjectLIGH*>(a_light);
-		GetLightRadius(light) = GetLightRadius(origLight);
+			GetLightRadius(light) = a_radius;
+		});
 	}
 
 
@@ -253,9 +247,6 @@ namespace FormExt
 
 		a_registry->RegisterFunction(
 			new NativeFunction2<StaticFunctionTag, void, TESForm*, SInt32>("SetLightRadius", "iEquip_FormExt", SetLightRadius, a_registry));
-
-		a_registry->RegisterFunction(
-			new NativeFunction1<StaticFunctionTag, void, TESForm*>("ResetLightRadius", "iEquip_FormExt", ResetLightRadius, a_registry));
 
 		a_registry->RegisterFunction(
 			new NativeFunction1<StaticFunctionTag, bool, TESForm*>("IsSpear", "iEquip_FormExt", IsSpear, a_registry));

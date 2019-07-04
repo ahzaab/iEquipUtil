@@ -13,6 +13,9 @@
 #include <cstdlib>  // size_t
 #include <limits>  // numeric_limits
 
+#include "InventoryUtil.h"
+#include "SKSEInterface.h"
+
 #include "RE/BSTList.h"  // BSSimpleList
 #include "RE/TESObjectREFR.h"  // RE::TESObjectREFR
 
@@ -213,9 +216,19 @@ namespace SoulSeeker
 
 		TESSoulGem* gem = static_cast<TESSoulGem*>(foundGem.entryData->type);
 		if (!IsReusable(gem)) {
-			RE::TESObjectREFR* objRef = reinterpret_cast<RE::TESObjectREFR*>(*g_thePlayer);
-			UInt32 droppedHandle;
-			objRef->RemoveItem(droppedHandle, gem, 1, RemoveType::kRemove, 0, 0);
+			UInt32 gemID = gem->formID;
+			SKSE::AddTask([gemID]()
+			{
+				auto gem = static_cast<TESSoulGem*>(LookupFormByID(gemID));
+				if (!gem) {
+					_WARNING("[WARNING] Failed to lookup gem by form id!");
+					return;
+				}
+
+				RE::TESObjectREFR* objRef = reinterpret_cast<RE::TESObjectREFR*>(*g_thePlayer);
+				UInt32 droppedHandle;
+				objRef->RemoveItem(droppedHandle, gem, 1, RemoveType::kRemove, 0, 0);
+			});
 		}
 		return static_cast<UInt32>(foundGem.origSoulSize);
 	}

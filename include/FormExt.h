@@ -14,7 +14,6 @@ namespace FormExt
 	SInt32	GetLightDuration(StaticFunctionTag*, TESForm* a_light);
 	SInt32	GetLightRadius(StaticFunctionTag*, TESForm* a_light);
 	void	SetLightRadius(StaticFunctionTag*, TESForm* a_light, SInt32 a_radius);
-	void	ResetLightRadius(StaticFunctionTag*, TESForm* a_light);
 	bool	IsSpear(StaticFunctionTag*, TESForm* a_form);
 	bool	IsJavelin(StaticFunctionTag*, TESForm* a_form);
 	bool	IsGrenade(StaticFunctionTag*, TESForm* a_form);

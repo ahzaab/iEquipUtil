@@ -16,6 +16,7 @@
 #include "InventoryUtil.h"  // ForEachInvEntry, ForEachExtraList
 #include "RefHandleManager.h"  // RefHandleManager
 #include "Registration.h"  // OnRefHandleActiveRegSet, OnRefHandleInvalidatedRegSet
+#include "SKSEInterface.h"
 
 #include "RE/ExtraPoison.h"  // ExtraPoison
 #include "RE/ExtraTextDisplayData.h"  // ExtraTextDisplayData
@@ -251,82 +252,85 @@ namespace InventoryExt
 
 	void ParseInventory(StaticFunctionTag*)
 	{
-		using FormID = UInt32;
-		using Count = SInt32;
-
-		auto manager = RefHandleManager::GetSingleton();
-		auto container = DYNAMIC_CAST((*g_thePlayer)->baseForm, TESForm, TESContainer);
-		if (!container) {
-			_ERROR("[ERROR] Failed to get player's default inventory!\n");
-			manager->SetInit();
-			return;
-		}
-
-		// extra items
-		std::map<FormID, std::pair<Count, InventoryEntryData*>> itemMap;
-		ForEachInvEntry([&](InventoryEntryData* a_entryData) -> bool
+		SKSE::AddTask([]()
 		{
-			if (manager->IsTrackedType(a_entryData->type)) {
-				itemMap.insert({ a_entryData->type->formID, { a_entryData->countDelta, a_entryData} });
-			}
-			return true;
-		});
+			using FormID = UInt32;
+			using Count = SInt32;
 
-		// default items
-		auto xChanges = static_cast<ExtraContainerChanges*>((*g_thePlayer)->extraData.GetByType(kExtraData_ContainerChanges));
-		for (UInt32 i = 0; i < container->numEntries; ++i) {
-			auto entry = container->entries[i];
-			auto it = itemMap.find(entry->form->formID);
-			if (it != itemMap.end() && it->first != kFormID_Gold) {
-				it->second.first += entry->count;
-			} else {
-				if (manager->IsTrackedType(entry->form)) {
-					auto entryData = InventoryEntryData::Create(entry->form, 0);
-					auto& objList = reinterpret_cast<RE::BSSimpleList<InventoryEntryData*>*&>(xChanges->data->objList);
-					if (!objList) {
-						objList = new RE::BSSimpleList<InventoryEntryData*>();
+			auto manager = RefHandleManager::GetSingleton();
+			auto container = DYNAMIC_CAST((*g_thePlayer)->baseForm, TESForm, TESContainer);
+			if (!container) {
+				_ERROR("[ERROR] Failed to get player's default inventory!\n");
+				manager->SetInit();
+				return;
+			}
+
+			// extra items
+			std::map<FormID, std::pair<Count, InventoryEntryData*>> itemMap;
+			ForEachInvEntry([&](InventoryEntryData* a_entryData) -> bool
+			{
+				if (manager->IsTrackedType(a_entryData->type)) {
+					itemMap.insert({ a_entryData->type->formID, { a_entryData->countDelta, a_entryData} });
+				}
+				return true;
+			});
+
+			// default items
+			auto xChanges = static_cast<ExtraContainerChanges*>((*g_thePlayer)->extraData.GetByType(kExtraData_ContainerChanges));
+			for (UInt32 i = 0; i < container->numEntries; ++i) {
+				auto entry = container->entries[i];
+				auto it = itemMap.find(entry->form->formID);
+				if (it != itemMap.end() && it->first != kFormID_Gold) {
+					it->second.first += entry->count;
+				} else {
+					if (manager->IsTrackedType(entry->form)) {
+						auto entryData = InventoryEntryData::Create(entry->form, 0);
+						auto& objList = reinterpret_cast<RE::BSSimpleList<InventoryEntryData*> * &>(xChanges->data->objList);
+						if (!objList) {
+							objList = new RE::BSSimpleList<InventoryEntryData*>();
+						}
+						objList->push_front(entryData);
+						itemMap.insert({ entryData->type->formID, { entry->count, entryData } });
 					}
-					objList->push_front(entryData);
-					itemMap.insert({ entryData->type->formID, { entry->count, entryData } });
 				}
 			}
-		}
 
-		auto regs = OnRefHandleActiveRegSet::GetSingleton();
-		for (auto& item : itemMap) {
-			SInt32 rawCount = item.second.first;
-			InventoryEntryData* entryData = item.second.second;
-			if (entryData->extendDataList) {
-				ForEachExtraList(entryData, [&](BaseExtraList* a_extraList) -> bool
-				{
-					auto xCount = static_cast<ExtraCount*>(a_extraList->GetByType(kExtraData_Count));
-					SInt32 count = xCount ? xCount->count : 1;
-					rawCount -= count;
-					auto result = manager->ActivateHandle(entryData->type, a_extraList);
+			auto regs = OnRefHandleActiveRegSet::GetSingleton();
+			for (auto& item : itemMap) {
+				SInt32 rawCount = item.second.first;
+				InventoryEntryData* entryData = item.second.second;
+				if (entryData->extendDataList) {
+					ForEachExtraList(entryData, [&](BaseExtraList* a_extraList) -> bool
+					{
+						auto xCount = static_cast<ExtraCount*>(a_extraList->GetByType(kExtraData_Count));
+						SInt32 count = xCount ? xCount->count : 1;
+						rawCount -= count;
+						auto result = manager->ActivateHandle(entryData->type, a_extraList);
+						if (result) {
+							regs->QueueEvent(entryData->type, *result, count);
+						}
+						return true;
+					});
+				}
+				BaseExtraList* xListOut;
+				for (SInt32 i = 0; i < rawCount; ++i) {
+					xListOut = 0;
+					auto result = manager->ActivateHandle(entryData->type, xListOut);
+					if (xListOut) {
+						auto& xLists = reinterpret_cast<RE::BSSimpleList<BaseExtraList*> * &>(entryData->extendDataList);
+						if (!xLists) {
+							xLists = new RE::BSSimpleList<BaseExtraList*>();
+						}
+						xLists->push_front(xListOut);
+					}
 					if (result) {
-						regs->QueueEvent(entryData->type, *result, count);
+						regs->QueueEvent(entryData->type, *result, 1);
 					}
-					return true;
-				});
-			}
-			BaseExtraList* xListOut;
-			for (SInt32 i = 0; i < rawCount; ++i) {
-				xListOut = 0;
-				auto result = manager->ActivateHandle(entryData->type, xListOut);
-				if (xListOut) {
-					auto& xLists = reinterpret_cast<RE::BSSimpleList<BaseExtraList*>*&>(entryData->extendDataList);
-					if (!xLists) {
-						xLists = new RE::BSSimpleList<BaseExtraList*>();
-					}
-					xLists->push_front(xListOut);
-				}
-				if (result) {
-					regs->QueueEvent(entryData->type, *result, 1);
 				}
 			}
-		}
 
-		manager->SetInit();
+			manager->SetInit();
+		});
 	}
 
 
@@ -517,18 +521,35 @@ namespace InventoryExt
 			return;
 		}
 
-		auto entryData = LookupEntry(a_item, a_refHandle);
-		if (!entryData) {
-			return;
-		}
+		UInt32 itemID = a_item->formID;
+		UInt32 newPoisonID = a_newPoison->formID;
+		SKSE::AddTask([itemID, a_refHandle, newPoisonID, a_newCount]()
+		{
+			auto item = LookupFormByID(itemID);
+			if (!item) {
+				_WARNING("[WARNING] Failed to lookup item by form id!");
+				return;
+			}
 
-		auto xPoison = static_cast<RE::ExtraPoison*>(entryData->extraList->GetByType(kExtraData_Poison));
-		if (!xPoison) {
-			xPoison = RE::ExtraPoison::Create();
-			RefHandleManager::AddExtraData(entryData->extraList, xPoison);
-		}
-		xPoison->poison = a_newPoison;
-		xPoison->count = a_newCount;
+			auto newPoison = static_cast<AlchemyItem*>(LookupFormByID(newPoisonID));
+			if (!item) {
+				_WARNING("[WARNING] Failed to lookup poison by form id!");
+				return;
+			}
+
+			auto entryData = LookupEntry(item, a_refHandle);
+			if (!entryData) {
+				return;
+			}
+
+			auto xPoison = static_cast<RE::ExtraPoison*>(entryData->extraList->GetByType(kExtraData_Poison));
+			if (!xPoison) {
+				xPoison = RE::ExtraPoison::Create();
+				RefHandleManager::AddExtraData(entryData->extraList, xPoison);
+			}
+			xPoison->poison = newPoison;
+			xPoison->count = a_newCount;
+		});
 	}
 
 
@@ -542,16 +563,26 @@ namespace InventoryExt
 			return;
 		}
 
-		auto entryData = LookupEntry(a_item, a_refHandle);
-		if (!entryData) {
-			return;
-		}
+		UInt32 itemID = a_item->formID;
+		SKSE::AddTask([itemID, a_refHandle]()
+		{
+			auto item = LookupFormByID(itemID);
+			if (!item) {
+				_WARNING("[WARNING] Failed to lookup item by form id!");
+				return;
+			}
 
-		auto xPoison = static_cast<RE::ExtraPoison*>(entryData->extraList->GetByType(kExtraData_Poison));
-		if (xPoison) {
-			entryData->extraList->Remove(kExtraData_Poison, xPoison);
-			delete xPoison;
-		}
+			auto entryData = LookupEntry(item, a_refHandle);
+			if (!entryData) {
+				return;
+			}
+
+			auto xPoison = static_cast<RE::ExtraPoison*>(entryData->extraList->GetByType(kExtraData_Poison));
+			if (xPoison) {
+				entryData->extraList->Remove(kExtraData_Poison, xPoison);
+				delete xPoison;
+			}
+		});
 	}
 
 
@@ -585,15 +616,25 @@ namespace InventoryExt
 			return;
 		}
 
-		auto entryData = LookupEntry(a_item, a_refHandle);
-		if (!entryData) {
-			return;
-		}
+		UInt32 itemID = a_item->formID;
+		SKSE::AddTask([itemID, a_refHandle, a_newCount]
+		{
+			auto item = LookupFormByID(itemID);
+			if (!item) {
+				_WARNING("[WARNING] Failed to lookup item by form id!");
+				return;
+			}
 
-		auto xPoison = static_cast<RE::ExtraPoison*>(entryData->extraList->GetByType(kExtraData_Poison));
-		if (xPoison) {
-			xPoison->count = a_newCount;
-		}
+			auto entryData = LookupEntry(item, a_refHandle);
+			if (!entryData) {
+				return;
+			}
+
+			auto xPoison = static_cast<RE::ExtraPoison*>(entryData->extraList->GetByType(kExtraData_Poison));
+			if (xPoison) {
+				xPoison->count = a_newCount;
+			}
+		});
 	}
 
 
@@ -621,55 +662,91 @@ namespace InventoryExt
 
 	void EquipItem(StaticFunctionTag*, TESForm* a_item, UInt32 a_refHandle, Actor* a_actor, UInt32 a_equipSlot, bool a_preventUnequip, bool a_equipSound)
 	{
-		if (!a_actor) {
+		if (!a_item) {
+			_WARNING("[WARNING] a_item is a NONE form!");
+			return;
+		} else if (!a_actor) {
 			_WARNING("[WARNING] a_actor is a NONE form!");
 			return;
 		}
 
-		auto entryData = LookupEntry(a_item, a_refHandle);
-		if (!entryData) {
-			return;
-		}
-
-		bool worn = false;
-		bool wornLeft = false;
-		SInt32 count = 1;
-		if (entryData->extraList) {
-			auto xCount = static_cast<ExtraCount*>(entryData->extraList->GetByType(kExtraData_Count));
-			if (xCount) {
-				count = xCount->count;
+		UInt32 itemID = a_item->formID;
+		UInt32 actorHandle = GetOrCreateRefrHandle(a_actor);
+		SKSE::AddTask([itemID, a_refHandle, actorHandle, a_equipSlot, a_preventUnequip, a_equipSound]()
+		{
+			auto item = LookupFormByID(itemID);
+			if (!item) {
+				_WARNING("[WARNING] Failed to lookup item by form id!");
+				return;
 			}
 
-			auto xWorn = static_cast<ExtraWorn*>(entryData->extraList->GetByType(kExtraData_Worn));
-			worn = xWorn != 0;
+			Actor* actor = 0;
+#if _WIN64
+			NiPointer<TESObjectREFR> refrOut;
+			UInt32 refHandle = actorHandle;	// dumb semantics
+			LookupREFRByHandle(refHandle, refrOut);
+			actor = static_cast<Actor*>(refrOut.get());
+#else
+			TESObjectREFR* refrOut;
+			UInt32 refHandle = actorHandle;
+			LookupREFRByHandle(&refHandle, &refrOut);
+			actor = static_cast<Actor*>(refrOut);
+#endif
 
-			auto xWornLeft = static_cast<ExtraWornLeft*>(entryData->extraList->GetByType(kExtraData_WornLeft));
-			wornLeft = xWornLeft != 0;
-		}
+			if (!actor) {
+				_WARNING("[WARNING] Failed to lookup actor by handle!");
+				return;
+			}
 
-		BGSEquipSlot* slot;
-		if (!GetSlotByID(a_equipSlot, a_item, worn, wornLeft, slot)) {
-			return;
-		}
+			auto entryData = LookupEntry(item, a_refHandle);
+			if (!entryData) {
+				return;
+			}
 
-		SInt32 countReq = (worn || wornLeft) ? 2 : 1;
-		if (count < countReq) {
-			_ERROR("[ERROR] Item count is too small to equip!\n");
-			return;
-		}
+			bool worn = false;
+			bool wornLeft = false;
+			SInt32 count = 1;
+			if (entryData->extraList) {
+				auto xCount = static_cast<ExtraCount*>(entryData->extraList->GetByType(kExtraData_Count));
+				if (xCount) {
+					count = xCount->count;
+				}
 
-		SInt32 equipCount;
-		BaseExtraList* extraList;
-		if (a_item->IsAmmo()) {
-			equipCount = count;
-			extraList = 0;
-		} else {
-			equipCount = 1;
-			extraList = entryData->extraList;
-		}
+				auto xWorn = static_cast<ExtraWorn*>(entryData->extraList->GetByType(kExtraData_Worn));
+				worn = xWorn != 0;
 
-		EquipManager* equipManager = EquipManager::GetSingleton();
-		CALL_MEMBER_FN(equipManager, EquipItem)(a_actor, a_item, extraList, equipCount, slot, a_equipSound, a_preventUnequip, false, 0);
+				auto xWornLeft = static_cast<ExtraWornLeft*>(entryData->extraList->GetByType(kExtraData_WornLeft));
+				wornLeft = xWornLeft != 0;
+			}
+
+			BGSEquipSlot* slot;
+			if (!GetSlotByID(a_equipSlot, item, worn, wornLeft, slot)) {
+				return;
+			}
+
+			SInt32 countReq = (worn || wornLeft) ? 2 : 1;
+			if (count < countReq) {
+				_ERROR("[ERROR] Item count is too small to equip!\n");
+				return;
+			}
+
+			SInt32 equipCount;
+			BaseExtraList* extraList;
+			if (item->IsAmmo()) {
+				equipCount = count;
+				extraList = 0;
+			} else {
+				equipCount = 1;
+				extraList = entryData->extraList;
+			}
+
+			EquipManager* equipManager = EquipManager::GetSingleton();
+			CALL_MEMBER_FN(equipManager, EquipItem)(actor, item, extraList, equipCount, slot, a_equipSound, a_preventUnequip, false, 0);
+
+#if _WIN32
+			actor->handleRefObject.DecRef();
+#endif
+		});
 	}
 
 
