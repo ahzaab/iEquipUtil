@@ -688,7 +688,7 @@ namespace InventoryExt
 			LookupREFRByHandle(refHandle, refrOut);
 			actor = static_cast<Actor*>(refrOut.get());
 #else
-			TESObjectREFR* refrOut;
+			TESObjectREFR* refrOut = 0;
 			LookupREFRByHandle(&refHandle, &refrOut);
 			actor = static_cast<Actor*>(refrOut);
 #endif

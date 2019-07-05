@@ -56,6 +56,7 @@ Event OnPageReset(String a_page)
 		AddTextOptionST("InventoryExt_DumpAll_T", "Dump info for all ref handles", "")
 		AddTextOptionST("InventoryExt_GetRefHandleAtInvIndex_T", "GetRefHandleAtInvIndex", "")
 		AddTextOptionST("InventoryExt_GetRefHandleFromWornObject_T", "GetRefHandleFromWornObject", "")
+		AddTextOptionST("InventoryExt_EquipItem_T", "EquipItem", "")
 		AddTextOptionST("MyClass_HelloWorld_T", "Hello world", "")
 		AddTextOptionST("MyClass_IsX_T", "Test IsX function", "")
 		AddTextOptionST("UIExt_GetShoutFillPct_T", "Test GetShoutFillPct", "")
@@ -233,6 +234,21 @@ State InventoryExt_GetRefHandleFromWornObject_T
 
 		handle = iEquip_InventoryExt.GetRefHandleFromWornObject(6)
 		Debug.Trace("SoulSeekerDBG: handle from gloves == " + handle)
+	EndEvent
+
+	Event OnDefaultST()
+	EndEvent
+
+	Event OnHighlightST()
+	EndEvent
+EndState
+
+
+State InventoryExt_EquipItem_T
+	Event OnSelectST()
+		Int handle = g_refHandles[0]
+		Form theForm = g_forms[0]
+		iEquip_InventoryExt.EquipItem(theForm, handle, PlayerRef)
 	EndEvent
 
 	Event OnDefaultST()
