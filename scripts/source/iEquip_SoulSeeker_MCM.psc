@@ -22,7 +22,7 @@ Event OnConfigInit()
 	g_refHandles = new Int[10]
 	g_arrSize = 0
 
-	iEquip_InventoryExt.RegisterForRefHandleActiveEvent(Self)
+	iEquip_InventoryExt.RegisterForOnRefHandleActiveEvent(Self)
 	iEquip_InventoryExt.RegisterForOnRefHandleInvalidatedEvent(Self)
 	RegisterForCrosshairRef()
 	iEquip_InventoryExt.ParseInventory()
@@ -58,9 +58,7 @@ Event OnPageReset(String a_page)
 		AddTextOptionST("InventoryExt_GetRefHandleFromWornObject_T", "GetRefHandleFromWornObject", "")
 		AddTextOptionST("InventoryExt_EquipItem_T", "EquipItem", "")
 		AddTextOptionST("MyClass_HelloWorld_T", "Hello world", "")
-		AddTextOptionST("MyClass_IsX_T", "Test IsX function", "")
-		AddTextOptionST("UIExt_GetShoutFillPct_T", "Test GetShoutFillPct", "")
-		AddTextOptionST("UIExt_GetShoutCooldownTime_T", "Test GetShoutCooldownTime", "")
+		;AddTextOptionST("MyClass_IsX_T", "Test IsX function", "")
 		SetCursorPosition(1)
 		AddSliderOptionST("SoulSeeker_FillMethod_S", "Fill Method:", SoulSeeker_FillMethod.GetValue() As Float)
 		AddToggleOptionST("SoulSeeker_PartialFill_B", "Partial Fill:", SoulSeeker_PartialFill.GetValue() As Bool)
@@ -136,7 +134,7 @@ EndState
 
 State InventoryExt_RegisterForRefHandleActiveEvent_T
 	Event OnSelectST()
-		iEquip_InventoryExt.RegisterForRefHandleActiveEvent(Self)
+		iEquip_InventoryExt.RegisterForOnRefHandleActiveEvent(Self)
 		Debug.Trace("SoulSeekerDBG: Registered for OnRefHandleActive")
 	EndEvent
 
@@ -261,10 +259,10 @@ EndState
 
 State MyClass_HelloWorld_T
 	Event OnSelectST()
-		ConsoleUtil.SetSelectedReference(PlayerRef)
-		Debug.Trace("SoulSeekerDBG: SetSelectedReference")
-		ConsoleUtil.ExecuteCommand("setav health 1000")
-		Debug.Trace("SoulSeekerDBG: ExecuteCommand")
+		ObjectReference ref = ConsoleUtil.GetSelectedReference()
+		ConsoleUtil.SetSelectedReference(ref)
+		Int version = ConsoleUtil.GetVersion()
+		ConsoleUtil.PrintMessage("Hello world! (ver: " + version + ")")
 	EndEvent
 
 	Event OnDefaultST()
@@ -273,6 +271,29 @@ State MyClass_HelloWorld_T
 	Event OnHighlightST()
 	EndEvent
 EndState
+
+
+Event MyEvent(Form a_form, ObjectReference a_ref, Int a_num, Float a_flt, String a_str, Form[] a_arr, Int[] a_numArr)
+	Debug.Trace("MYDBG: a_form == " + a_form)
+	Debug.Trace("MYDBG: a_ref == " + a_ref)
+	Debug.Trace("MYDBG: a_num == " + a_num)
+	Debug.Trace("MYDBG: a_flt == " + a_flt)
+	Debug.Trace("MYDBG: a_str == " + a_str)
+
+	Int i = 0
+	Debug.Trace("MYDBG: a_arr.Length == " + a_arr.Length)
+	While (i < a_arr.Length)
+		Debug.Trace("MYDBG: a_arr[" + i + "] == " + a_arr[i])
+		i += 1
+	EndWhile
+
+	i = 0
+	Debug.Trace("MYDBG: a_numArr.Length == " + a_numArr.Length)
+	While (i < a_numArr.Length)
+		Debug.Trace("MYDBG: a_numArr[" + i + "] == " + a_numArr[i])
+		i += 1
+	EndWhile
+EndEvent
 
 
 State MyClass_IsX_T
@@ -295,34 +316,6 @@ State MyClass_IsX_T
 		Else
 			Debug.Trace("SoulSeekerDBG: Could not find esl")
 		EndIf
-	EndEvent
-
-	Event OnDefaultST()
-	EndEvent
-
-	Event OnHighlightST()
-	EndEvent
-EndState
-
-
-State UIExt_GetShoutFillPct_T
-	Event OnSelectST()
-		Float result = iEquip_UIExt.GetShoutFillPct()
-		Debug.Trace("SoulSeekerDBG: GetShoutFillPct == " + result)
-	EndEvent
-
-	Event OnDefaultST()
-	EndEvent
-
-	Event OnHighlightST()
-	EndEvent
-EndState
-
-
-State UIExt_GetShoutCooldownTime_T
-	Event OnSelectST()
-		Float result = iEquip_UIExt.GetShoutCooldownTime()
-		Debug.Trace("SoulSeekerDBG: GetShoutCooldownTime == " + result)
 	EndEvent
 
 	Event OnDefaultST()

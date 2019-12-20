@@ -1,108 +1,92 @@
 #pragma once
 
-#include "gamethreads.h"  // TaskDelegate
-#include "GameTypes.h"  // BSFixedString
-#include "PapyrusEvents.h"  // RegistrationSetHolder
+#include "RE/Skyrim.h"
+#include "SKSE/RegistrationSet.h"
 
-#include "RefHandleManager.h"  // RefHandleManager::RefHandle
-
-class TESForm;
-class TESObjectWEAP;
+#include "RefHandleManager.h"
 
 
-class OnBoundWeaponEquippedRegSet : public RegistrationSetHolder<NullParameters>
+// 1. Weapon type
+// 2. Equip slot
+class OnBoundWeaponEquippedRegSet : public SKSE::RegistrationSet<UInt32, UInt32>
 {
 public:
+	using Base = SKSE::RegistrationSet<UInt32, UInt32>;
+
+
 	static OnBoundWeaponEquippedRegSet* GetSingleton();
 
-	void QueueEvent(UInt32 a_weaponType, UInt32 a_equipSlot);
-
 private:
-	using RegParams = NullParameters;
-
-
 	OnBoundWeaponEquippedRegSet();
 	OnBoundWeaponEquippedRegSet(const OnBoundWeaponEquippedRegSet&) = delete;
 	OnBoundWeaponEquippedRegSet(OnBoundWeaponEquippedRegSet&&) = delete;
+	~OnBoundWeaponEquippedRegSet() = default;
 
 	OnBoundWeaponEquippedRegSet& operator=(const OnBoundWeaponEquippedRegSet&) = delete;
 	OnBoundWeaponEquippedRegSet& operator=(OnBoundWeaponEquippedRegSet&&) = delete;
-
-
-	BSFixedString _callback;
 };
 
 
-class OnBoundWeaponUnequippedRegSet : public RegistrationSetHolder<NullParameters>
+// 1. Weapon
+// 2. Equip slot
+class OnBoundWeaponUnequippedRegSet : public SKSE::RegistrationSet<RE::TESObjectWEAP*, UInt32>
 {
 public:
+	using Base = SKSE::RegistrationSet<RE::TESObjectWEAP*, UInt32>;
+
+
 	static OnBoundWeaponUnequippedRegSet* GetSingleton();
 
-	void QueueEvent(TESObjectWEAP* a_weap, UInt32 a_equipSlot);
-
 private:
-	using RegParams = NullParameters;
-
-
 	OnBoundWeaponUnequippedRegSet();
 	OnBoundWeaponUnequippedRegSet(const OnBoundWeaponUnequippedRegSet&) = delete;
 	OnBoundWeaponUnequippedRegSet(OnBoundWeaponUnequippedRegSet&&) = delete;
+	~OnBoundWeaponUnequippedRegSet() = default;
 
 	OnBoundWeaponUnequippedRegSet& operator=(const OnBoundWeaponUnequippedRegSet&) = delete;
 	OnBoundWeaponUnequippedRegSet& operator=(OnBoundWeaponUnequippedRegSet&&) = delete;
-
-
-	BSFixedString _callback;
 };
 
 
-class OnRefHandleActiveRegSet : public RegistrationSetHolder<NullParameters>
+// 1. Base item
+// 2. Ref handle
+// 2. Item count
+class OnRefHandleActiveRegSet : public SKSE::RegistrationSet<RE::TESForm*, UInt32, SInt32>
 {
 public:
-	using RefHandle = RefHandleManager::RefHandle;
+	using Base = SKSE::RegistrationSet<RE::TESForm*, UInt32, SInt32>;
 
 
 	static OnRefHandleActiveRegSet* GetSingleton();
 
-	void QueueEvent(TESForm* a_baseItem, RefHandle a_refHandle, SInt32 a_itemCount);
-
 private:
-	using RegParams = NullParameters;
-
-
 	OnRefHandleActiveRegSet();
 	OnRefHandleActiveRegSet(const OnRefHandleActiveRegSet&) = delete;
 	OnRefHandleActiveRegSet(OnRefHandleActiveRegSet&&) = delete;
+	~OnRefHandleActiveRegSet() = default;
 
 	OnRefHandleActiveRegSet& operator=(const OnRefHandleActiveRegSet&) = delete;
 	OnRefHandleActiveRegSet& operator=(OnRefHandleActiveRegSet&&) = delete;
-
-
-	BSFixedString _callback;
 };
 
 
-class OnRefHandleInvalidatedRegSet : public RegistrationSetHolder<NullParameters>
+// 1. Base item
+// 2. Ref handle
+class OnRefHandleInvalidatedRegSet : public SKSE::RegistrationSet<RE::TESForm*, UInt32>
 {
 public:
+	using Base = SKSE::RegistrationSet<RE::TESForm*, UInt32>;
 	using RefHandle = RefHandleManager::RefHandle;
 
 
 	static OnRefHandleInvalidatedRegSet* GetSingleton();
 
-	void QueueEvent(TESForm* a_baseItem, RefHandle a_refHandle);
-
 private:
-	using RegParams = NullParameters;
-
-
 	OnRefHandleInvalidatedRegSet();
 	OnRefHandleInvalidatedRegSet(const OnRefHandleInvalidatedRegSet&) = delete;
 	OnRefHandleInvalidatedRegSet(OnRefHandleInvalidatedRegSet&&) = delete;
+	~OnRefHandleInvalidatedRegSet() = default;
 
 	OnRefHandleInvalidatedRegSet& operator=(const OnRefHandleInvalidatedRegSet&) = delete;
 	OnRefHandleInvalidatedRegSet& operator=(OnRefHandleInvalidatedRegSet&&) = delete;
-
-
-	BSFixedString _callback;
 };

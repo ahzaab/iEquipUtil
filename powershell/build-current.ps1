@@ -1,8 +1,8 @@
 param([string]$filePath)
 
 # USER DEFINED
-$sse = "D:\Games\SteamLibrary\steamapps\common\Skyrim Special Edition"
-$outDir = "D:\Mods\ModOrganizer2_SkyrimSE\mods\iEquip_SoulSeeker"
+$sse = "E:\Games\SteamLibrary\steamapps\common\Skyrim Special Edition"
+$outDir = "E:\Mods\ModOrganizer2_SkyrimSE\mods\iEquip_SoulSeeker"
 
 
 # GRAB DIRECTORIES

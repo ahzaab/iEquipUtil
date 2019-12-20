@@ -1,24 +1,17 @@
 #pragma once
 
-#include "GameEvents.h"  // BSEventSink, EventResult, EventDispatcher
+#include <limits>
+#include <map>
+#include <mutex>
+#include <optional>
+#include <set>
 
-#include <limits>  // numeric_limits
-#include <map>  // map
-#include <mutex>  // recursive_mutex, lock_guard
-#include <optional>  // optional
-#include <set>  // set
-
-#include "RE/EventDispatcherList.h"  // BSTEventSink
-#include "RE/TESUniqueIDChangeEvent.h"  // TESUniqueIDChangeEvent
-
-class BaseExtraList;
-class BSExtraData;
-class InventoryEntryData;
-class TESForm;
-struct SKSESerializationInterface;
+#include "RE/Skyrim.h"
+#include "SKSE/API.h"
 
 
-class RefHandleManager : public BSTEventSink<RE::TESUniqueIDChangeEvent>
+class RefHandleManager :
+	public RE::BSTEventSink<RE::TESUniqueIDChangeEvent>
 {
 private:
 	using SubType = UInt16;
@@ -35,31 +28,37 @@ public:
 	struct EntryData
 	{
 		constexpr EntryData() : invEntryData(0), extraList(0) {}
-		constexpr EntryData(InventoryEntryData* a_invEntryData, BaseExtraList* a_extraList) : invEntryData(a_invEntryData), extraList(a_extraList) {}
+		constexpr EntryData(RE::InventoryEntryData* a_invEntryData, RE::ExtraDataList* a_extraList) : invEntryData(a_invEntryData), extraList(a_extraList) {}
 
 
-		InventoryEntryData* invEntryData;
-		BaseExtraList* extraList;
+		RE::InventoryEntryData* invEntryData;
+		RE::ExtraDataList* extraList;
 	};
 
 
-	static RefHandleManager*	GetSingleton();
-	static void					AddExtraData(BaseExtraList* a_extraList, BSExtraData* a_extraData);
+	static RefHandleManager* GetSingleton();
 
-	void						Clear() noexcept;
-	bool						Save(SKSESerializationInterface* a_intfc, UInt32 a_type, UInt32 a_version);
-	bool						Load(SKSESerializationInterface* a_intfc, UInt32 a_version);
-	HandleResult				ActivateHandle(TESForm* a_item, BaseExtraList*& a_extraList);
-	HandleResult				ActivateHandle(TESForm* a_item, BaseExtraList& a_extraList);
-	HandleResult				InvalidateHandle(TESForm* a_item, BaseExtraList* a_extraList);
-	std::optional<EntryData>	LookupEntry(TESForm* a_form, RefHandle a_handle);
+	void	Register();
+	void	Clear() noexcept;
+	bool	Save(SKSE::SerializationInterface* a_intfc, UInt32 a_type, UInt32 a_version);
+	bool	Load(SKSE::SerializationInterface* a_intfc, UInt32 a_version);
+
+	HandleResult	ActivateAndDispatch(RE::TESForm* a_item, RE::ExtraDataList*& a_extraList, SInt32 a_count);
+	HandleResult	ActivateAndDispatch(RE::TESForm* a_item, RE::ExtraDataList& a_extraList, SInt32 a_count);
+	bool			InvalidateAndDispatch(RE::TESForm* a_item, UniqueID a_uniqueID);
+	bool			TryInvalidateAndDispatch(RE::TESForm* a_item, RE::ExtraDataList* a_extraList);
+
+	std::optional<EntryData>	LookupEntry(RE::TESForm* a_item, RefHandle a_handle);
 	RefHandle					LookupHandle(UniqueID a_uniqueID);
-	bool						IsTrackedType(TESForm* a_form);
-	bool						IsInit() const;
-	void						SetInit();
+
+	bool	IsTrackedType(const RE::TESForm* a_form) const;
+	bool	IsInit() const;
+	void	SetInit();
 
 private:
-	using Locker = std::lock_guard<std::recursive_mutex>;
+	using EventResult = RE::EventResult;
+	using Lock = std::recursive_mutex;
+	using Locker = std::lock_guard<Lock>;
 
 
 	enum
@@ -68,6 +67,7 @@ private:
 		kRefHandle,
 		kTotal,
 
+		kInvalidUniqueID = 0,
 		kPlayerRefID = 0x14,
 
 		kRefArrSize = std::numeric_limits<UInt16>::max() / 8,
@@ -83,17 +83,19 @@ private:
 	RefHandleManager& operator=(const RefHandleManager&) = delete;
 	RefHandleManager& operator=(RefHandleManager&&) = delete;
 
-	virtual	EventResult ReceiveEvent(RE::TESUniqueIDChangeEvent* a_event, EventDispatcher<RE::TESUniqueIDChangeEvent>* a_dispatcher) override;
+	// needs to handle items getting unique id that we haven't tracked before
+	virtual	EventResult ReceiveEvent(RE::TESUniqueIDChangeEvent* a_event, RE::BSTEventSource<RE::TESUniqueIDChangeEvent>* a_dispatcher) override;
 
-	HandleResult	ActivateHandle(TESForm* a_item, BaseExtraList& a_extraList, RefHandle a_handle);
-	RefHandle		GetFreeHandle();
-	void			MarkHandle(RefHandle a_handle);
-	void			UnmarkHandle(RefHandle a_handle);
-	BaseExtraList*	CreateBaseExtraList();
-	UniqueID		GetNextUniqueID();
+	HandleResult ActivateAndDispatch(RE::TESForm* a_item, RE::ExtraDataList& a_extraList, SInt32 a_count, RefHandle a_handle);
+
+	RefHandle	GetFreeHandle();
+	void		MarkHandle(RefHandle a_handle);
+	void		UnmarkHandle(RefHandle a_handle);
+
+	UniqueID GetNextUniqueID();
 
 
-	mutable std::recursive_mutex	_lock;
+	mutable Lock					_lock;
 	std::map<UniqueID, RefHandle>	_idToHandleMap;
 	std::map<RefHandle, UniqueID>	_handleToIDMap;
 	UInt8							_activeHandles[kRefArrSize];

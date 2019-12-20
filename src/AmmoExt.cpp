@@ -1,28 +1,26 @@
 #include "AmmoExt.h"
 
-#include "GameForms.h"  // BGSKeyword, LookupFormByID
-#include "GameObjects.h"  // TESAmmo
-#include "PapyrusNativeFunctions.h"  // StaticFunctionTag, NativeFunction
-
 
 namespace AmmoExt
 {
-	bool IsAmmoBound(StaticFunctionTag*, TESAmmo* a_ammo)
+	bool IsAmmoBound(RE::StaticFunctionTag*, RE::TESAmmo* a_ammo)
 	{
+		using Object = RE::BGSDefaultObjectManager::DefaultObject;
+
 		if (!a_ammo) {
-			_WARNING("[ERROR] a_ammo is a NONE form!");
+			_WARNING("a_ammo is a NONE form!");
 			return false;
 		}
 
-		auto WeapTypeBoundArrow = static_cast<BGSKeyword*>(LookupFormByID(0x0010D501));
-		return a_ammo->keyword.HasKeyword(WeapTypeBoundArrow);
+		auto dobj = RE::BGSDefaultObjectManager::GetSingleton();
+		auto weapTypeBoundArrow = dobj->GetObject<RE::BGSKeyword>(Object::kWeapTypeBoundArrow);
+		return a_ammo->HasKeyword(weapTypeBoundArrow);
 	}
 
 
-	bool RegisterFuncs(VMClassRegistry* a_registry)
+	bool RegisterFuncs(RE::BSScript::Internal::VirtualMachine* a_vm)
 	{
-		a_registry->RegisterFunction(
-			new NativeFunction1<StaticFunctionTag, bool, TESAmmo*>("IsAmmoBound", "iEquip_AmmoExt", IsAmmoBound, a_registry));
+		a_vm->RegisterFunction("IsAmmoBound", "iEquip_AmmoExt", IsAmmoBound);
 
 		return true;
 	}

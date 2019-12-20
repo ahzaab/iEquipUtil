@@ -1,14 +1,12 @@
 #pragma once
 
-class TESForm;
-class TESObjectREFR;
-class VMClassRegistry;
-struct StaticFunctionTag;
+#include "RE/Skyrim.h"
 
 
 namespace ObjectReferenceExt
 {
-	SInt32		GetNumItemsOfType(StaticFunctionTag*, TESObjectREFR* a_container, UInt32 a_type);
-	TESForm*	GetNthFormOfType(StaticFunctionTag*, TESObjectREFR* a_container, UInt32 a_type, UInt32 a_n);
-	bool		RegisterFuncs(VMClassRegistry* a_registry);
+	RE::TESForm*	GetNthFormOfType(RE::StaticFunctionTag*, RE::TESObjectREFR* a_container, UInt32 a_type, UInt32 a_n);
+	SInt32			GetNumItemsOfType(RE::StaticFunctionTag*, RE::TESObjectREFR* a_container, UInt32 a_type);
+
+	bool RegisterFuncs(RE::BSScript::Internal::VirtualMachine* a_vm);
 }

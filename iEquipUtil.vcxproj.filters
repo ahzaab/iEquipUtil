@@ -22,9 +22,6 @@
     <ClCompile Include="src\Events.cpp">
       <Filter>src\lib</Filter>
     </ClCompile>
-    <ClCompile Include="src\Logging.cpp">
-      <Filter>src\lib</Filter>
-    </ClCompile>
     <ClCompile Include="src\Settings.cpp">
       <Filter>src\lib</Filter>
     </ClCompile>
@@ -36,9 +33,6 @@
     </ClCompile>
     <ClCompile Include="src\SpellExt.cpp">
       <Filter>src\papyrus</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Hooks.cpp">
-      <Filter>src\lib</Filter>
     </ClCompile>
     <ClCompile Include="src\UIExt.cpp">
       <Filter>src\papyrus</Filter>
@@ -52,13 +46,16 @@
     <ClCompile Include="src\InventoryExt.cpp">
       <Filter>src\papyrus</Filter>
     </ClCompile>
-    <ClCompile Include="src\SKSEInterface.cpp">
+    <ClCompile Include="src\ObjectReferenceExt.cpp">
+      <Filter>src\papyrus</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Hooks.cpp">
       <Filter>src\lib</Filter>
     </ClCompile>
-    <ClCompile Include="src\RE\EventDispatcherList.cpp">
-      <Filter>src\RE</Filter>
+    <ClCompile Include="src\LightExt.cpp">
+      <Filter>src\papyrus</Filter>
     </ClCompile>
-    <ClCompile Include="src\ObjectReferenceExt.cpp">
+    <ClCompile Include="src\Papyrus.cpp">
       <Filter>src\papyrus</Filter>
     </ClCompile>
   </ItemGroup>
@@ -77,12 +74,6 @@
     </Filter>
     <Filter Include="src\lib">
       <UniqueIdentifier>{74860629-6459-49d5-a9b1-33e7b12e2175}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\RE">
-      <UniqueIdentifier>{6dc753a0-54a3-46cf-be24-e6c86c54ad7d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="include\RE">
-      <UniqueIdentifier>{e1c91d5a-81b0-40f7-809a-e15ca255a388}</UniqueIdentifier>
     </Filter>
     <Filter Include="include\papyrus">
       <UniqueIdentifier>{93b24056-21d6-49dc-88c8-1c69e90de3ac}</UniqueIdentifier>
@@ -110,19 +101,10 @@
     <ClInclude Include="include\Events.h">
       <Filter>include\lib</Filter>
     </ClInclude>
-    <ClInclude Include="include\Utility.h">
-      <Filter>include\lib</Filter>
-    </ClInclude>
     <ClInclude Include="include\version.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="include\Logging.h">
-      <Filter>include\lib</Filter>
-    </ClInclude>
     <ClInclude Include="include\Settings.h">
-      <Filter>include\lib</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Forms.h">
       <Filter>include\lib</Filter>
     </ClInclude>
     <ClInclude Include="include\LocaleManager.h">
@@ -134,32 +116,11 @@
     <ClInclude Include="include\SpellExt.h">
       <Filter>include\papyrus</Filter>
     </ClInclude>
-    <ClInclude Include="include\Hooks.h">
-      <Filter>include\lib</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Types.h">
-      <Filter>include\lib</Filter>
-    </ClInclude>
-    <ClInclude Include="include\RE\ExtraPoison.h">
-      <Filter>include\RE</Filter>
-    </ClInclude>
-    <ClInclude Include="include\RE\TESObjectREFR.h">
-      <Filter>include\RE</Filter>
-    </ClInclude>
-    <ClInclude Include="include\RE\BSTList.h">
-      <Filter>include\RE</Filter>
-    </ClInclude>
-    <ClInclude Include="include\RE\Memory.h">
-      <Filter>include\RE</Filter>
-    </ClInclude>
     <ClInclude Include="include\UIExt.h">
       <Filter>include\papyrus</Filter>
     </ClInclude>
     <ClInclude Include="include\Registration.h">
       <Filter>include\lib</Filter>
-    </ClInclude>
-    <ClInclude Include="include\RE\ExtraTextDisplayData.h">
-      <Filter>include\RE</Filter>
     </ClInclude>
     <ClInclude Include="include\RefHandleManager.h">
       <Filter>include\lib</Filter>
@@ -167,32 +128,17 @@
     <ClInclude Include="include\InventoryExt.h">
       <Filter>include\papyrus</Filter>
     </ClInclude>
-    <ClInclude Include="include\SKSEInterface.h">
-      <Filter>include\lib</Filter>
-    </ClInclude>
-    <ClInclude Include="include\RE\TESUniqueIDChangeEvent.h">
-      <Filter>include\RE</Filter>
-    </ClInclude>
-    <ClInclude Include="include\RE\EventDispatcherList.h">
-      <Filter>include\RE</Filter>
-    </ClInclude>
-    <ClInclude Include="include\RE\TESEquipEvent.h">
-      <Filter>include\RE</Filter>
-    </ClInclude>
-    <ClInclude Include="include\InventoryUtil.h">
-      <Filter>include\lib</Filter>
-    </ClInclude>
-    <ClInclude Include="include\RE\InventoryMenu.h">
-      <Filter>include\RE</Filter>
-    </ClInclude>
     <ClInclude Include="include\ObjectReferenceExt.h">
       <Filter>include\papyrus</Filter>
     </ClInclude>
-    <ClInclude Include="include\function_ref.h">
+    <ClInclude Include="include\Hooks.h">
       <Filter>include\lib</Filter>
     </ClInclude>
-    <ClInclude Include="include\RE\HUDMenu.h">
-      <Filter>include\RE</Filter>
+    <ClInclude Include="include\LightExt.h">
+      <Filter>include\papyrus</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Papyrus.h">
+      <Filter>include\papyrus</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

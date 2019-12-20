@@ -1,294 +1,189 @@
 #include "FormExt.h"
 
-#include "GameForms.h"  // TESForm
-#include "PapyrusNativeFunctions.h"  // NativeFunction
-#include "PapyrusVM.h"  // VMClassRegistry
+#include "SKSE/API.h"
 
-#include "Registration.h"  // OnBoundWeaponEquippedRegSet, OnBoundWeaponUnequippedRegSet
-#include "Settings.h"  // Settings
-#include "SKSEInterface.h"
+#include "Registration.h"
+#include "Settings.h"
 
 
 namespace FormExt
 {
-	namespace
-	{
-		UInt32& GetLightRadius(TESObjectLIGH* a_light)
-		{
-#if _WIN64
-			return a_light->unkE0.radius;
-#else
-			return a_light->unk78.unk04;
-#endif
-		}
-	}
-
-
-	void RegisterForBoundWeaponEquippedEvent(StaticFunctionTag*, TESForm* a_thisForm)
+	void RegisterForBoundWeaponEquippedEvent(RE::StaticFunctionTag*, RE::TESForm* a_thisForm)
 	{
 		if (!a_thisForm) {
-			_WARNING("[WARNING] a_thisForm is a NONE form!");
+			_WARNING("a_thisForm is a NONE form!");
 			return;
 		}
 
-		OnBoundWeaponEquippedRegSet::GetSingleton()->Register<TESForm>(a_thisForm->formType, a_thisForm);
+		auto regs = OnBoundWeaponEquippedRegSet::GetSingleton();
+		regs->Register(a_thisForm);
 	}
 
 
-	void UnregisterForBoundWeaponEquippedEvent(StaticFunctionTag*, TESForm* a_thisForm)
+	void UnregisterForBoundWeaponEquippedEvent(RE::StaticFunctionTag*, RE::TESForm* a_thisForm)
 	{
 		if (!a_thisForm) {
-			_WARNING("[WARNING] a_thisForm is a NONE form!");
+			_WARNING("a_thisForm is a NONE form!");
 			return;
 		}
 
-		OnBoundWeaponEquippedRegSet::GetSingleton()->Unregister<TESForm>(a_thisForm->formType, a_thisForm);
+		auto regs = OnBoundWeaponEquippedRegSet::GetSingleton();
+		regs->Unregister(a_thisForm);
 	}
 
 
-	void RegisterForBoundWeaponUnequippedEvent(StaticFunctionTag*, TESForm* a_thisForm)
+	void RegisterForBoundWeaponUnequippedEvent(RE::StaticFunctionTag*, RE::TESForm* a_thisForm)
 	{
 		if (!a_thisForm) {
-			_WARNING("[WARNING] a_thisForm is a NONE form!");
+			_WARNING("a_thisForm is a NONE form!");
 			return;
 		}
 
-		OnBoundWeaponUnequippedRegSet::GetSingleton()->Register<TESForm>(a_thisForm->formType, a_thisForm);
+		auto regs = OnBoundWeaponUnequippedRegSet::GetSingleton();
+		regs->Register(a_thisForm);
 	}
 
 
-	void UnregisterForBoundWeaponUnequippedEvent(StaticFunctionTag*, TESForm* a_thisForm)
+	void UnregisterForBoundWeaponUnequippedEvent(RE::StaticFunctionTag*, RE::TESForm* a_thisForm)
 	{
 		if (!a_thisForm) {
-			_WARNING("[WARNING] a_thisForm is a NONE form!");
+			_WARNING("a_thisForm is a NONE form!");
 			return;
 		}
 
-		OnBoundWeaponUnequippedRegSet::GetSingleton()->Unregister<TESForm>(a_thisForm->formType, a_thisForm);
+		auto regs = OnBoundWeaponUnequippedRegSet::GetSingleton();
+		regs->Unregister(a_thisForm);
 	}
 
 
-	SInt32 GetLightDuration(StaticFunctionTag*, TESForm* a_light)
-	{
-		if (!a_light) {
-			_WARNING("[WARNING] a_light is a NONE form!");
-			return -1;
-		} else if (a_light->formType != kFormType_Light) {
-			_WARNING("[WARNING] a_light is a not a light!");
-			return -1;
-		}
-
-		auto light = static_cast<TESObjectLIGH*>(a_light);
-#if _WIN64
-		return light->unkE0.time;
-#else
-		return light->unk78.unk00;
-#endif
-	}
-
-
-	SInt32 GetLightRadius(StaticFunctionTag*, TESForm* a_light)
-	{
-		if (!a_light) {
-			_WARNING("[WARNING] a_light is a NONE form!");
-			return -1;
-		} else if (a_light->formType != kFormType_Light) {
-			_WARNING("[WARNING] a_light is a not a light!");
-			return -1;
-		}
-
-		auto light = static_cast<TESObjectLIGH*>(a_light);
-		return GetLightRadius(light);
-	}
-
-
-	void SetLightRadius(StaticFunctionTag*, TESForm* a_light, SInt32 a_radius)
-	{
-		if (!a_light) {
-			_WARNING("[WARNING] a_light is a NONE form!");
-			return;
-		} else if (a_light->formType != kFormType_Light) {
-			_WARNING("[WARNING] a_light is a not a light!");
-			return;
-		} else if (a_light < 0) {
-			_WARNING("[WARNING] a_radius can not be negative!");
-			return;
-		}
-
-		UInt32 lightID = a_light->formID;
-		SKSE::AddTask([lightID, a_radius]()
-		{
-			auto light = static_cast<TESObjectLIGH*>(LookupFormByID(lightID));
-			if (!light) {
-				_WARNING("[WARNING] Failed to lookup light by id!");
-				return;
-			}
-
-			GetLightRadius(light) = a_radius;
-		});
-	}
-
-
-	template <aSetting<TESForm*>& arr>
-	bool IsT(TESForm* a_form)
+	template <aSetting<RE::TESForm*>& ARRAY>
+	bool IsT(RE::TESForm* a_form)
 	{
 		if (!a_form) {
-			_WARNING("[WARNING] a_form is a NONE form!");
+			_WARNING("a_form is a NONE form!");
 			return false;
 		}
 
-		return arr.find(a_form->formID) != arr.end();
+		return ARRAY.find(a_form->formID) != ARRAY.end();
 	}
 
 
-	bool IsSpear(StaticFunctionTag*, TESForm* a_form)
-	{
-		return IsT<Settings::spears>(a_form);
-	}
-
-
-	bool IsJavelin(StaticFunctionTag*, TESForm* a_form)
-	{
-		return IsT<Settings::javelins>(a_form);
-	}
-
-
-	bool IsGrenade(StaticFunctionTag*, TESForm* a_form)
-	{
-		return IsT<Settings::grenades>(a_form);
-	}
-
-
-	bool IsThrowingAxe(StaticFunctionTag*, TESForm* a_form)
-	{
-		return IsT<Settings::throwingAxes>(a_form);
-	}
-
-
-	bool IsThrowingKnife(StaticFunctionTag*, TESForm* a_form)
-	{
-		return IsT<Settings::throwingKnives>(a_form);
-	}
-
-
-	bool IsWax(StaticFunctionTag*, TESForm* a_form)
-	{
-		return IsT<Settings::waxes>(a_form);
-	}
-
-
-	bool IsOil(StaticFunctionTag*, TESForm* a_form)
-	{
-		return IsT<Settings::oils>(a_form);
-	}
-
-
-	bool IsSpellWard(StaticFunctionTag*, TESForm* a_form)
-	{
-		return IsT<Settings::spellWards>(a_form);
-	}
-
-
-	bool HasFire(StaticFunctionTag*, TESForm* a_form)
+	bool HasFire(RE::StaticFunctionTag*, RE::TESForm* a_form)
 	{
 		return IsT<Settings::fire>(a_form);
 	}
 
 
-	bool HasIce(StaticFunctionTag*, TESForm* a_form)
+	bool HasIce(RE::StaticFunctionTag*, RE::TESForm* a_form)
 	{
 		return IsT<Settings::ice>(a_form);
 	}
 
 
-	bool HasShock(StaticFunctionTag*, TESForm* a_form)
-	{
-		return IsT<Settings::shock>(a_form);
-	}
-
-
-	bool HasPoison(StaticFunctionTag*, TESForm* a_form)
+	bool HasPoison(RE::StaticFunctionTag*, RE::TESForm* a_form)
 	{
 		return IsT<Settings::poison>(a_form);
 	}
 
 
-	bool IsSalve(StaticFunctionTag*, TESForm* a_form)
+	bool HasShock(RE::StaticFunctionTag*, RE::TESForm* a_form)
 	{
-		return IsT<Settings::salves>(a_form);
+		return IsT<Settings::shock>(a_form);
 	}
 
 
-	bool IsBandage(StaticFunctionTag*, TESForm* a_form)
+	bool IsBandage(RE::StaticFunctionTag*, RE::TESForm* a_form)
 	{
 		return IsT<Settings::bandages>(a_form);
 	}
 
 
-	bool RegisterFuncs(VMClassRegistry* a_registry)
+	bool IsGrenade(RE::StaticFunctionTag*, RE::TESForm* a_form)
 	{
-		a_registry->RegisterFunction(
-			new NativeFunction1<StaticFunctionTag, void, TESForm*>("RegisterForBoundWeaponEquippedEvent", "iEquip_FormExt", RegisterForBoundWeaponEquippedEvent, a_registry));
+		return IsT<Settings::grenades>(a_form);
+	}
 
-		a_registry->RegisterFunction(
-			new NativeFunction1<StaticFunctionTag, void, TESForm*>("UnregisterForBoundWeaponEquippedEvent", "iEquip_FormExt", UnregisterForBoundWeaponEquippedEvent, a_registry));
 
-		a_registry->RegisterFunction(
-			new NativeFunction1<StaticFunctionTag, void, TESForm*>("RegisterForBoundWeaponUnequippedEvent", "iEquip_FormExt", RegisterForBoundWeaponUnequippedEvent, a_registry));
+	bool IsJavelin(RE::StaticFunctionTag*, RE::TESForm* a_form)
+	{
+		return IsT<Settings::javelins>(a_form);
+	}
 
-		a_registry->RegisterFunction(
-			new NativeFunction1<StaticFunctionTag, void, TESForm*>("UnregisterForBoundWeaponUnequippedEvent", "iEquip_FormExt", UnregisterForBoundWeaponUnequippedEvent, a_registry));
 
-		a_registry->RegisterFunction(
-			new NativeFunction1<StaticFunctionTag, SInt32, TESForm*>("GetLightDuration", "iEquip_FormExt", GetLightDuration, a_registry));
+	bool IsOil(RE::StaticFunctionTag*, RE::TESForm* a_form)
+	{
+		return IsT<Settings::oils>(a_form);
+	}
 
-		a_registry->RegisterFunction(
-			new NativeFunction1<StaticFunctionTag, SInt32, TESForm*>("GetLightRadius", "iEquip_FormExt", GetLightRadius, a_registry));
 
-		a_registry->RegisterFunction(
-			new NativeFunction2<StaticFunctionTag, void, TESForm*, SInt32>("SetLightRadius", "iEquip_FormExt", SetLightRadius, a_registry));
+	bool IsSalve(RE::StaticFunctionTag*, RE::TESForm* a_form)
+	{
+		return IsT<Settings::salves>(a_form);
+	}
 
-		a_registry->RegisterFunction(
-			new NativeFunction1<StaticFunctionTag, bool, TESForm*>("IsSpear", "iEquip_FormExt", IsSpear, a_registry));
 
-		a_registry->RegisterFunction(
-			new NativeFunction1<StaticFunctionTag, bool, TESForm*>("IsJavelin", "iEquip_FormExt", IsJavelin, a_registry));
+	bool IsSpear(RE::StaticFunctionTag*, RE::TESForm* a_form)
+	{
+		return IsT<Settings::spears>(a_form);
+	}
 
-		a_registry->RegisterFunction(
-			new NativeFunction1<StaticFunctionTag, bool, TESForm*>("IsGrenade", "iEquip_FormExt", IsGrenade, a_registry));
 
-		a_registry->RegisterFunction(
-			new NativeFunction1<StaticFunctionTag, bool, TESForm*>("IsThrowingAxe", "iEquip_FormExt", IsThrowingAxe, a_registry));
+	bool IsSpellRanged(RE::StaticFunctionTag*, RE::TESForm* a_form)
+	{
+		return IsT<Settings::rangedSpells>(a_form);
+	}
 
-		a_registry->RegisterFunction(
-			new NativeFunction1<StaticFunctionTag, bool, TESForm*>("IsThrowingKnife", "iEquip_FormExt", IsThrowingKnife, a_registry));
 
-		a_registry->RegisterFunction(
-			new NativeFunction1<StaticFunctionTag, bool, TESForm*>("IsWax", "iEquip_FormExt", IsWax, a_registry));
+	bool IsSpellWard(RE::StaticFunctionTag*, RE::TESForm* a_form)
+	{
+		return IsT<Settings::spellWards>(a_form);
+	}
 
-		a_registry->RegisterFunction(
-			new NativeFunction1<StaticFunctionTag, bool, TESForm*>("IsOil", "iEquip_FormExt", IsOil, a_registry));
 
-		a_registry->RegisterFunction(
-			new NativeFunction1<StaticFunctionTag, bool, TESForm*>("IsSpellWard", "iEquip_FormExt", IsSpellWard, a_registry));
+	bool IsStaffRanged(RE::StaticFunctionTag*, RE::TESForm* a_form)
+	{
+		return IsT<Settings::rangedStaves>(a_form);
+	}
 
-		a_registry->RegisterFunction(
-			new NativeFunction1<StaticFunctionTag, bool, TESForm*>("HasFire", "iEquip_FormExt", HasFire, a_registry));
 
-		a_registry->RegisterFunction(
-			new NativeFunction1<StaticFunctionTag, bool, TESForm*>("HasIce", "iEquip_FormExt", HasIce, a_registry));
+	bool IsThrowingAxe(RE::StaticFunctionTag*, RE::TESForm* a_form)
+	{
+		return IsT<Settings::throwingAxes>(a_form);
+	}
 
-		a_registry->RegisterFunction(
-			new NativeFunction1<StaticFunctionTag, bool, TESForm*>("HasShock", "iEquip_FormExt", HasShock, a_registry));
 
-		a_registry->RegisterFunction(
-			new NativeFunction1<StaticFunctionTag, bool, TESForm*>("HasPoison", "iEquip_FormExt", HasPoison, a_registry));
+	bool IsThrowingKnife(RE::StaticFunctionTag*, RE::TESForm* a_form)
+	{
+		return IsT<Settings::throwingKnives>(a_form);
+	}
 
-		a_registry->RegisterFunction(
-			new NativeFunction1<StaticFunctionTag, bool, TESForm*>("IsSalve", "iEquip_FormExt", IsSalve, a_registry));
 
-		a_registry->RegisterFunction(
-			new NativeFunction1<StaticFunctionTag, bool, TESForm*>("IsBandage", "iEquip_FormExt", IsBandage, a_registry));
+	bool IsWax(RE::StaticFunctionTag*, RE::TESForm* a_form)
+	{
+		return IsT<Settings::waxes>(a_form);
+	}
+
+
+	bool RegisterFuncs(RE::BSScript::Internal::VirtualMachine* a_vm)
+	{
+		a_vm->RegisterFunction("RegisterForBoundWeaponEquippedEvent", "iEquip_FormExt", RegisterForBoundWeaponEquippedEvent);
+		a_vm->RegisterFunction("UnregisterForBoundWeaponEquippedEvent", "iEquip_FormExt", UnregisterForBoundWeaponEquippedEvent);
+		a_vm->RegisterFunction("RegisterForBoundWeaponUnequippedEvent", "iEquip_FormExt", RegisterForBoundWeaponUnequippedEvent);
+		a_vm->RegisterFunction("UnregisterForBoundWeaponUnequippedEvent", "iEquip_FormExt", UnregisterForBoundWeaponUnequippedEvent);
+		a_vm->RegisterFunction("HasFire", "iEquip_FormExt", HasFire);
+		a_vm->RegisterFunction("HasIce", "iEquip_FormExt", HasIce);
+		a_vm->RegisterFunction("HasPoison", "iEquip_FormExt", HasPoison);
+		a_vm->RegisterFunction("HasShock", "iEquip_FormExt", HasShock);
+		a_vm->RegisterFunction("IsBandage", "iEquip_FormExt", IsBandage);
+		a_vm->RegisterFunction("IsGrenade", "iEquip_FormExt", IsGrenade);
+		a_vm->RegisterFunction("IsJavelin", "iEquip_FormExt", IsJavelin);
+		a_vm->RegisterFunction("IsOil", "iEquip_FormExt", IsOil);
+		a_vm->RegisterFunction("IsSalve", "iEquip_FormExt", IsSalve);
+		a_vm->RegisterFunction("IsSpear", "iEquip_FormExt", IsSpear);
+		a_vm->RegisterFunction("IsSpellWard", "iEquip_FormExt", IsSpellWard);
+		a_vm->RegisterFunction("IsThrowingAxe", "iEquip_FormExt", IsThrowingAxe);
+		a_vm->RegisterFunction("IsThrowingKnife", "iEquip_FormExt", IsThrowingKnife);
+		a_vm->RegisterFunction("IsWax", "iEquip_FormExt", IsWax);
 
 		return true;
 	}

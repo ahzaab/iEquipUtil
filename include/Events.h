@@ -1,28 +1,24 @@
 #pragma once
 
-#include "GameEvents.h"  // BSTEventSink, EventResult, EventDispatcher
-#include "PapyrusEvents.h"  // SKSEModCallbackEvent, RegistrationSetHolder, NullParameters
-
-#include "RE/EventDispatcherList.h"  // BSTEventSink
-#include "RE/TESEquipEvent.h"  // RE::TESEquipEvent
+#include "RE/Skyrim.h"
 
 
 namespace Events
 {
-	class EquipEventHandler : public BSTEventSink<RE::TESEquipEvent>
+	class EquipEventHandler : public RE::BSTEventSink<RE::TESEquipEvent>
 	{
-	protected:
-		EquipEventHandler() = default;
-		virtual ~EquipEventHandler() = default;
-
 	public:
-		virtual EventResult ReceiveEvent(RE::TESEquipEvent* a_event, EventDispatcher<RE::TESEquipEvent>* a_dispatcher) override;
+		using EventResult = RE::EventResult;
 
 		static EquipEventHandler* GetSingleton();
 
+		virtual EventResult ReceiveEvent(RE::TESEquipEvent* a_event, RE::BSTEventSource<RE::TESEquipEvent>* a_dispatcher) override;
+
 	private:
+		EquipEventHandler() = default;
 		EquipEventHandler(const EquipEventHandler&) = delete;
 		EquipEventHandler(EquipEventHandler&&) = delete;
+		virtual ~EquipEventHandler() = default;
 
 		EquipEventHandler&	operator=(const EquipEventHandler&) = delete;
 		EquipEventHandler&	operator=(EquipEventHandler&&) = delete;

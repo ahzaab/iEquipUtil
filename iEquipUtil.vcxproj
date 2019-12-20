@@ -53,21 +53,28 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)\..;$(ProjectDir)include;$(SolutionDir)..\common;$(SolutionDir)skse64;$(SolutionDir)skse64_common;$(SolutionDir)Json2Settings\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)..;$(ProjectDir)include;$(SolutionDir)CommonLibSSE\include;$(SolutionDir)Json2Settings\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;PLUGIN_EXAMPLE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <PrecompiledHeader>
       </PrecompiledHeader>
-      <WarningLevel>Level4</WarningLevel>
+      <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <ForcedIncludeFiles>common/IPrefix.h;Logging.h;Utility.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <ForcedIncludeFiles>ForceInclude.h;SKSE/Logger.h</ForcedIncludeFiles>
       <UseFullPaths>false</UseFullPaths>
       <CompileAs>CompileAsCpp</CompileAs>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <DisableSpecificWarnings>4201;4100;4127;4245;4239;4189;4189;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>
+      </DisableSpecificWarnings>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <UndefinePreprocessorDefinitions>min;max;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
+      <UndefinePreprocessorDefinitions>
+      </UndefinePreprocessorDefinitions>
+      <EnforceTypeConversionRules>true</EnforceTypeConversionRules>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <ControlFlowGuard>Guard</ControlFlowGuard>
+      <FloatingPointExceptions>true</FloatingPointExceptions>
     </ClCompile>
     <Link>
       <ModuleDefinitionFile>exports.def</ModuleDefinitionFile>
@@ -84,7 +91,7 @@
       </Message>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>copy "$(TargetPath)" "D:\Games\SteamLibrary\steamapps\common\Skyrim Special Edition\Data\SKSE\Plugins\$(TargetFileName)" /Y</Command>
+      <Command>copy "$(TargetPath)" "$(Skyrim64Path)\Data\SKSE\Plugins\$(TargetFileName)" /Y</Command>
     </PostBuildEvent>
     <PostBuildEvent>
       <Message>
@@ -95,21 +102,25 @@
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)\..;$(ProjectDir)include;$(SolutionDir)..\common;$(SolutionDir)skse64;$(SolutionDir)skse64_common;$(SolutionDir)Json2Settings\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)..;$(ProjectDir)include;$(SolutionDir)CommonLibSSE\include;$(SolutionDir)Json2Settings\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;PLUGIN_EXAMPLE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <PrecompiledHeader>
       </PrecompiledHeader>
-      <WarningLevel>Level4</WarningLevel>
+      <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <ForcedIncludeFiles>common/IPrefix.h;Logging.h;Utility.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <ForcedIncludeFiles>ForceInclude.h;SKSE/Logger.h</ForcedIncludeFiles>
       <UseFullPaths>false</UseFullPaths>
       <CompileAs>CompileAsCpp</CompileAs>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <DisableSpecificWarnings>4201;4100;4127;4245;4239;4189;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>
+      </DisableSpecificWarnings>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <UndefinePreprocessorDefinitions>min;max;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
+      <UndefinePreprocessorDefinitions>
+      </UndefinePreprocessorDefinitions>
+      <EnforceTypeConversionRules>true</EnforceTypeConversionRules>
+      <ExceptionHandling>Sync</ExceptionHandling>
     </ClCompile>
     <Link>
       <ModuleDefinitionFile>exports.def</ModuleDefinitionFile>
@@ -128,7 +139,7 @@
     <PostBuildEvent>
       <Message>
       </Message>
-      <Command>copy "$(TargetPath)" "D:\Games\SteamLibrary\steamapps\common\Skyrim Special Edition\Data\SKSE\Plugins\$(TargetFileName)" /Y</Command>
+      <Command>copy "$(TargetPath)" "$(Skyrim64Path)\Data\SKSE\Plugins\$(TargetFileName)" /Y</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -141,14 +152,13 @@
     <ClCompile Include="src\FormExt.cpp" />
     <ClCompile Include="src\Hooks.cpp" />
     <ClCompile Include="src\InventoryExt.cpp" />
+    <ClCompile Include="src\LightExt.cpp" />
     <ClCompile Include="src\ObjectReferenceExt.cpp" />
+    <ClCompile Include="src\Papyrus.cpp" />
     <ClCompile Include="src\Registration.cpp" />
-    <ClCompile Include="src\RE\EventDispatcherList.cpp" />
     <ClCompile Include="src\LocaleManager.cpp" />
-    <ClCompile Include="src\Logging.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\Settings.cpp" />
-    <ClCompile Include="src\SKSEInterface.cpp" />
     <ClCompile Include="src\SoulSeeker.cpp" />
     <ClCompile Include="src\SpellExt.cpp" />
     <ClCompile Include="src\StringExt.cpp" />
@@ -157,8 +167,8 @@
     <ClCompile Include="src\WeaponExt.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\common\common_vc14.vcxproj">
-      <Project>{472e19ab-def0-42df-819b-18722e8dc822}</Project>
+    <ProjectReference Include="..\CommonLibSSE\CommonLibSSE.vcxproj">
+      <Project>{c1af9204-ee2d-421b-b11e-1d70d8acc11f}</Project>
     </ProjectReference>
     <ProjectReference Include="..\skse64\skse64.vcxproj">
       <Project>{7028b79c-06e3-4d9a-b38c-1dc3680b1bdb}</Project>
@@ -170,36 +180,21 @@
   <ItemGroup>
     <ClInclude Include="include\ActorExt.h" />
     <ClInclude Include="include\AmmoExt.h" />
-    <ClInclude Include="include\function_ref.h" />
-    <ClInclude Include="include\Hooks.h" />
     <ClInclude Include="include\Events.h" />
-    <ClInclude Include="include\Forms.h" />
     <ClInclude Include="include\FormExt.h" />
+    <ClInclude Include="include\Hooks.h" />
     <ClInclude Include="include\InventoryExt.h" />
-    <ClInclude Include="include\InventoryUtil.h" />
+    <ClInclude Include="include\LightExt.h" />
     <ClInclude Include="include\ObjectReferenceExt.h" />
+    <ClInclude Include="include\Papyrus.h" />
     <ClInclude Include="include\Registration.h" />
-    <ClInclude Include="include\RE\BSTList.h" />
-    <ClInclude Include="include\RE\ExtraPoison.h" />
-    <ClInclude Include="include\RE\ExtraTextDisplayData.h" />
-    <ClInclude Include="include\RE\HUDMenu.h" />
-    <ClInclude Include="include\RE\InventoryMenu.h" />
-    <ClInclude Include="include\RE\Memory.h" />
-    <ClInclude Include="include\RE\EventDispatcherList.h" />
-    <ClInclude Include="include\RE\TESEquipEvent.h" />
-    <ClInclude Include="include\RE\TESObjectREFR.h" />
-    <ClInclude Include="include\RE\TESUniqueIDChangeEvent.h" />
-    <ClInclude Include="include\SKSEInterface.h" />
-    <ClInclude Include="include\Types.h" />
     <ClInclude Include="include\LocaleManager.h" />
-    <ClInclude Include="include\Logging.h" />
     <ClInclude Include="include\Settings.h" />
     <ClInclude Include="include\SoulSeeker.h" />
     <ClInclude Include="include\SpellExt.h" />
     <ClInclude Include="include\StringExt.h" />
     <ClInclude Include="include\UIExt.h" />
     <ClInclude Include="include\RefHandleManager.h" />
-    <ClInclude Include="include\Utility.h" />
     <ClInclude Include="include\version.h" />
     <ClInclude Include="include\WeaponExt.h" />
   </ItemGroup>

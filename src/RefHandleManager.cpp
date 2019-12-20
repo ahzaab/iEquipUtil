@@ -1,21 +1,11 @@
 #include "RefHandleManager.h"
 
-#include "GameAPI.h"  // g_thePlayer
-#include "GameBSExtraData.h"  // BaseExtraList
-#include "GameExtraData.h"  // ExtraContainerChanges, ExtraUniqueID
-#include "GameForms.h"  // TESForm
-#include "GameReferences.h"  // PlayerCharacter
-#include "PluginAPI.h"  // SKSESerializationInterface
+#include <algorithm>
+#include <cstring> 
+#include <type_traits>
+#include <vector>
 
-#include <algorithm>  // sort
-#include <cstring>  // memset
-#include <type_traits>  // remove_extent_t, underlying_type_t
-#include <vector>  // vector
-
-#include "InventoryUtil.h"  // ForEachInvEntry, ForEachExtraList
-
-#include "RE/BSTList.h"  // BSSimpleList
-#include "RE/Memory.h"  // Heap_Allocate
+#include "Registration.h"
 
 
 RefHandleManager* RefHandleManager::GetSingleton()
@@ -25,23 +15,10 @@ RefHandleManager* RefHandleManager::GetSingleton()
 }
 
 
-void RefHandleManager::AddExtraData(BaseExtraList* a_extraList, BSExtraData* a_extraData)
+void RefHandleManager::Register()
 {
-#if _WIN64
-	using func_t = BSExtraData*(BaseExtraList*, BSExtraData*);
-	// E8 ? ? ? ? 4C 8D 75 10
-	RelocAddr<func_t*> func(0x00131990);	// 1_5_80
-	func(a_extraList, a_extraData);
-#else
-	using func_t = BSExtraData*(BaseExtraList::*)(BSExtraData*);
-	union
-	{
-		std::uintptr_t addr;
-		func_t func;
-	};
-	addr = 0x0040A790;
-	(a_extraList->*func)(a_extraData);
-#endif
+	auto events = RE::ScriptEventSourceHolder::GetSingleton();
+	events->AddEventSink(this);
 }
 
 
@@ -52,19 +29,20 @@ void RefHandleManager::Clear() noexcept
 	_idToHandleMap.clear();
 	_handleToIDMap.clear();
 	std::memset(_activeHandles, 0, sizeof(_activeHandles));
+	_init = false;
 }
 
 
-bool RefHandleManager::Save(SKSESerializationInterface* a_intfc, UInt32 a_type, UInt32 a_version)
+bool RefHandleManager::Save(SKSE::SerializationInterface* a_intfc, UInt32 a_type, UInt32 a_version)
 {
 	Locker locker(_lock);
 
 	a_intfc->OpenRecord(a_type, a_version);
 
-	a_intfc->WriteRecordData(&_init, sizeof(_init));
+	a_intfc->WriteRecordData(_init);
 
 	std::size_t numEntries = _idToHandleMap.size();
-	a_intfc->WriteRecordData(&numEntries, sizeof(numEntries));
+	a_intfc->WriteRecordData(numEntries);
 
 	SubType buf[kTotal];
 	for (auto& it : _idToHandleMap) {
@@ -77,26 +55,26 @@ bool RefHandleManager::Save(SKSESerializationInterface* a_intfc, UInt32 a_type, 
 }
 
 
-bool RefHandleManager::Load(SKSESerializationInterface* a_intfc, UInt32 a_version)
+bool RefHandleManager::Load(SKSE::SerializationInterface* a_intfc, UInt32 a_version)
 {
 	Locker locker(_lock);
 
-	a_intfc->ReadRecordData(&_init, sizeof(_init));
+	a_intfc->ReadRecordData(_init);
 
 	std::size_t numEntries;
-	if (!a_intfc->ReadRecordData(&numEntries, sizeof(numEntries))) {
-		_ERROR("[ERROR] Failed to load handle count!\n");
+	if (!a_intfc->ReadRecordData(numEntries)) {
+		_ERROR("Failed to load handle count!\n");
 		return false;
 	}
 
 	SubType buf[kTotal];
 	for (std::size_t i = 0; i < numEntries; ++i) {
-		if (a_intfc->ReadRecordData(&buf, sizeof(buf))) {
-			_idToHandleMap.insert({ buf[kUniqueID], buf[kRefHandle] });
-			_handleToIDMap.insert({ buf[kRefHandle], buf[kUniqueID] });
+		if (a_intfc->ReadRecordData(buf)) {
+			_idToHandleMap.insert(std::make_pair(buf[kUniqueID], buf[kRefHandle]));
+			_handleToIDMap.insert(std::make_pair(buf[kRefHandle], buf[kUniqueID]));
 			MarkHandle(buf[kRefHandle]);
 		} else {
-			_ERROR("[ERROR] Failed to load ref handles!\n");
+			_ERROR("Failed to load ref handles!\n");
 			return false;
 		}
 	}
@@ -105,112 +83,128 @@ bool RefHandleManager::Load(SKSESerializationInterface* a_intfc, UInt32 a_versio
 }
 
 
-auto RefHandleManager::ActivateHandle(TESForm* a_item, BaseExtraList*& a_extraList)
+auto RefHandleManager::ActivateAndDispatch(RE::TESForm* a_item, RE::ExtraDataList*& a_extraList, SInt32 a_count)
 -> HandleResult
 {
+	assert(a_item);
+	assert(IsTrackedType(a_item));
 	Locker locker(_lock);
 
-	if (!IsTrackedType(a_item)) {
-		return std::nullopt;
-	}
-
-	RefHandle handle = GetFreeHandle();
+	auto handle = GetFreeHandle();
 	if (handle == kInvalidRefHandle) {
 		return std::nullopt;
 	}
 
 	if (!a_extraList) {
-		a_extraList = CreateBaseExtraList();
+		a_extraList = new RE::ExtraDataList();
 	}
 
-	return ActivateHandle(a_item, *a_extraList, handle);
+	return ActivateAndDispatch(a_item, *a_extraList, a_count, handle);
 }
 
 
-auto RefHandleManager::ActivateHandle(TESForm* a_item, BaseExtraList& a_extraList)
+auto RefHandleManager::ActivateAndDispatch(RE::TESForm* a_item, RE::ExtraDataList& a_extraList, SInt32 a_count)
 -> HandleResult
 {
+	assert(a_item);
+	assert(IsTrackedType(a_item));
 	Locker locker(_lock);
 
-	if (!IsTrackedType(a_item)) {
-		return std::nullopt;
-	}
-
-	RefHandle handle = GetFreeHandle();
+	auto handle = GetFreeHandle();
 	if (handle == kInvalidRefHandle) {
 		return std::nullopt;
 	}
 
-	return ActivateHandle(a_item, a_extraList, handle);
+	return ActivateAndDispatch(a_item, a_extraList, a_count, handle);
 }
 
 
-auto RefHandleManager::InvalidateHandle(TESForm* a_item, BaseExtraList* a_extraList)
--> HandleResult
+bool RefHandleManager::InvalidateAndDispatch(RE::TESForm* a_item, UniqueID a_uniqueID)
 {
+	assert(a_item);
 	Locker locker(_lock);
 
-	if (!IsTrackedType(a_item)) {
-		return std::nullopt;
+	auto it = _idToHandleMap.find(a_uniqueID);
+	if (it == _idToHandleMap.end()) {
+		return false;
 	}
 
-	auto xID = a_extraList ? static_cast<ExtraUniqueID*>(a_extraList->GetByType(kExtraData_UniqueID)) : 0;
+	auto handle = it->second;
+	_handleToIDMap.erase(handle);
+	UnmarkHandle(handle);
+	_idToHandleMap.erase(it);
+
+	auto regs = OnRefHandleInvalidatedRegSet::GetSingleton();
+	regs->QueueEvent(a_item, handle);
+	return true;
+}
+
+
+bool RefHandleManager::TryInvalidateAndDispatch(RE::TESForm* a_item, RE::ExtraDataList* a_extraList)
+{
+	assert(a_item);
+	assert(a_extraList);
+
+	auto xID = a_extraList->GetByType<RE::ExtraUniqueID>();
 	if (!xID) {
-		return std::nullopt;
+		return false;
 	}
 
-	auto it = _idToHandleMap.find(xID->uniqueId);
-	if (it != _idToHandleMap.end()) {
-		RefHandle handle = it->second;
-		_handleToIDMap.erase(handle);
-		_idToHandleMap.erase(it);
-		UnmarkHandle(handle);
-
-		return HandleResult(handle);
-	} else {
-		return std::nullopt;
-	}
+	return InvalidateAndDispatch(a_item, xID->uniqueID);
 }
 
 
-auto RefHandleManager::LookupEntry(TESForm* a_form, RefHandle a_handle)
--> std::optional<EntryData>
+auto RefHandleManager::LookupEntry(RE::TESForm* a_item, RefHandle a_handle)
+	-> std::optional<EntryData>
 {
-	Locker locker(_lock);
+	auto object = a_item->As<RE::TESBoundObject*>();
+	if (!object) {
+		_ERROR("Form is not a bound object!\n");
+		return std::nullopt;
+	}
 
 	if (a_handle > kLargestHandle || a_handle == kInvalidRefHandle) {
-		_ERROR("[ERROR] Ref handle is invalid!\n");
+		_ERROR("Ref handle is invalid!\n");
 		return std::nullopt;
 	}
 
-	auto it = _handleToIDMap.find(a_handle);
-	if (it == _handleToIDMap.end()) {
-		_ERROR("[ERROR] handle not found in map!\n");
+	Locker locker(_lock);
+
+	auto idIt = _handleToIDMap.find(a_handle);
+	if (idIt == _handleToIDMap.end()) {
+		_ERROR("Handle not found in map!\n");
+		return std::nullopt;
+	}
+	auto idToFind = idIt->second;
+
+	auto player = RE::PlayerCharacter::GetSingleton();
+	auto inv = player->GetInventory([&](RE::TESBoundObject* a_object) -> bool
+	{
+		return a_object == object;
+	});
+
+	auto invIt = inv.find(object);
+	if (invIt == inv.end()) {
 		return std::nullopt;
 	}
 
 	std::optional<EntryData> result;
-	ForEachInvEntry([&](InventoryEntryData* a_invEntryData) -> bool
-	{
-		if (a_invEntryData->type->formID == a_form->formID) {
-			ForEachExtraList(a_invEntryData, [&](BaseExtraList* a_extraList) -> bool
-			{
-				auto xID = static_cast<ExtraUniqueID*>(a_extraList->GetByType(kExtraData_UniqueID));
-				if (xID && xID->uniqueId == it->second) {
-					result.emplace(a_invEntryData, a_extraList);
-				}
-				return !result.has_value();
-			});
+	auto entryData = invIt->second.second;
+	if (entryData->extraLists) {
+		for (auto& xList : *entryData->extraLists) {
+			auto xID = xList->GetByType<RE::ExtraUniqueID>();
+			if (xID && xID->uniqueID == idToFind) {
+				result.emplace(entryData, xList);
+				break;
+			}
 		}
-		return !result.has_value();
-	});
-
+	}
 	return result;
 }
 
 
 auto RefHandleManager::LookupHandle(UniqueID a_uniqueID)
--> RefHandle
+	-> RefHandle
 {
 	Locker locker(_lock);
 
@@ -219,11 +213,13 @@ auto RefHandleManager::LookupHandle(UniqueID a_uniqueID)
 }
 
 
-bool RefHandleManager::IsTrackedType(TESForm* a_form)
+bool RefHandleManager::IsTrackedType(const RE::TESForm* a_form) const
 {
+	assert(a_form);
+
 	switch (a_form->formType) {
-	case kFormType_Armor:
-	case kFormType_Weapon:
+	case RE::FormType::Armor:
+	case RE::FormType::Weapon:
 		return true;
 	default:
 		return false;
@@ -245,7 +241,6 @@ void RefHandleManager::SetInit()
 }
 
 
-
 RefHandleManager::RefHandleManager() :
 	_lock(),
 	_idToHandleMap(),
@@ -255,46 +250,72 @@ RefHandleManager::RefHandleManager() :
 {}
 
 
-EventResult RefHandleManager::ReceiveEvent(RE::TESUniqueIDChangeEvent* a_event, EventDispatcher<RE::TESUniqueIDChangeEvent>* a_dispatcher)
+auto RefHandleManager::ReceiveEvent(RE::TESUniqueIDChangeEvent* a_event, RE::BSTEventSource<RE::TESUniqueIDChangeEvent>* a_dispatcher)
+	-> EventResult
 {
-	if (a_event->ownerFormID != kPlayerRefID || a_event->oldUniqueID == a_event->newUniqueID) {
-		return kEvent_Continue;
+	if (!IsInit() || !a_event) {
+		return EventResult::kContinue;
 	}
 
+	if ((a_event->oldOwnerID != kPlayerRefID && a_event->newOwnerID != kPlayerRefID) || a_event->oldUniqueID == a_event->newUniqueID) {
+		return EventResult::kContinue;
+	}
+	auto item = RE::TESForm::LookupByID(a_event->itemID);
+
 	Locker locker(_lock);
+
 	auto it = _idToHandleMap.find(a_event->oldUniqueID);
-	if (it != _idToHandleMap.end()) {
-		RefHandle handle = it->second;
+	if (it != _idToHandleMap.end()) {	// update id change
+		auto handle = it->second;
 		_handleToIDMap.erase(handle);
 		_idToHandleMap.erase(it);
 
-		_handleToIDMap.insert({ handle, a_event->newUniqueID });
-		_idToHandleMap.insert({ a_event->newUniqueID, handle });
+		if (a_event->newUniqueID == kInvalidUniqueID) {
+			auto regs = OnRefHandleInvalidatedRegSet::GetSingleton();
+			if (item) {
+				regs->QueueEvent(item, handle);
+			}
+		} else {
+			_handleToIDMap.insert(std::make_pair(handle, a_event->newUniqueID));
+			_idToHandleMap.insert(std::make_pair(a_event->newUniqueID, handle));
+		}
+	} else if (item && IsTrackedType(item)) {	// consider tracking form if we didn't before
+		auto handle = GetFreeHandle();
+		if (handle != kInvalidRefHandle) {
+			_handleToIDMap.insert(std::make_pair(handle, a_event->newUniqueID));
+			_idToHandleMap.insert(std::make_pair(a_event->newUniqueID, handle));
+			auto regs = OnRefHandleActiveRegSet::GetSingleton();
+			regs->QueueEvent(item, handle, 1);
+		}
 	}
 
-	return kEvent_Continue;
+	return EventResult::kContinue;
 }
 
 
-auto RefHandleManager::ActivateHandle(TESForm* a_item, BaseExtraList& a_extraList, RefHandle a_handle)
+auto RefHandleManager::ActivateAndDispatch(RE::TESForm* a_item, RE::ExtraDataList& a_extraList, SInt32 a_count, RefHandle a_handle)
 -> HandleResult
 {
-	auto xID = static_cast<ExtraUniqueID*>(a_extraList.GetByType(kExtraData_UniqueID));
+	auto xID = a_extraList.GetByType<RE::ExtraUniqueID>();
 	if (!xID) {
-		xID = ExtraUniqueID::Create();
-		xID->ownerFormId = kPlayerRefID;
-		xID->uniqueId = GetNextUniqueID();
-		AddExtraData(&a_extraList, xID);
+		xID = new RE::ExtraUniqueID();
+		xID->owner = kPlayerRefID;
+		xID->uniqueID = GetNextUniqueID();
+		a_extraList.Add(xID);
 	}
 
-	_idToHandleMap.insert({ xID->uniqueId, a_handle });
-	_handleToIDMap.insert({ a_handle, xID->uniqueId });
+	_idToHandleMap.insert({ xID->uniqueID, a_handle });
+	_handleToIDMap.insert({ a_handle, xID->uniqueID });
+
+	auto regs = OnRefHandleActiveRegSet::GetSingleton();
+	regs->QueueEvent(a_item, a_handle, a_count);
+
 	return HandleResult(a_handle);
 }
 
 
 auto RefHandleManager::GetFreeHandle()
--> RefHandle
+	-> RefHandle
 {
 	for (std::size_t i = 0; i < kRefArrSize; ++i) {
 		if (_activeHandles[i] != 0xFF) {
@@ -306,7 +327,7 @@ auto RefHandleManager::GetFreeHandle()
 			}
 		}
 	}
-	_FATALERROR("[FATAL ERROR] Ran out of ref handles!\n");
+	_FATALERROR("Ran out of ref handles!\n");
 	return kInvalidRefHandle;
 }
 
@@ -329,35 +350,10 @@ void RefHandleManager::UnmarkHandle(RefHandle a_handle)
 }
 
 
-BaseExtraList* RefHandleManager::CreateBaseExtraList()
-{
-	constexpr std::size_t XLIST_SIZE = sizeof(BaseExtraList);
-
-	auto xList = static_cast<BaseExtraList*>(RE::malloc(XLIST_SIZE));
-	std::memset(xList, 0, XLIST_SIZE);
-
-	return xList;
-}
-
-
 auto RefHandleManager::GetNextUniqueID()
--> UniqueID
+	-> UniqueID
 {
-#if _WIN64
-	using func_t = UniqueID(ExtraContainerChanges::Data*);
-	// E8 ? ? ? ? 44 0F B7 F8
-	RelocAddr<func_t*> func(0x001ECD30);	// 1_5_80
-	auto containerChanges = static_cast<ExtraContainerChanges*>((*g_thePlayer)->extraData.GetByType(kExtraData_ContainerChanges));
-	return func(containerChanges->data);
-#else
-	using func_t = UniqueID(ExtraContainerChanges::Data::*)();
-	union
-	{
-		std::uintptr_t addr;
-		func_t func;
-	};
-	addr = 0x00481FE0;
-	auto containerChanges = static_cast<ExtraContainerChanges*>((*g_thePlayer)->extraData.GetByType(kExtraData_ContainerChanges));
-	return (containerChanges->data->*func)();
-#endif
+	auto player = RE::PlayerCharacter::GetSingleton();
+	auto invChanges = player->GetInventoryChanges();
+	return invChanges ? invChanges->GetNextUniqueID() : 0;
 }

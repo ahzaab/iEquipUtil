@@ -1,76 +1,27 @@
 #include "SpellExt.h"
 
-#include "GameObjects.h"  // SpellItem, MagicItem::EffectItem, EffectSetting, TESObjectWEAP
-#include "PapyrusNativeFunctions.h"  // NativeFunction
-#include "PapyrusVM.h"  // VMClassRegistry
-
 
 namespace SpellExt
 {
-	bool IsHealingSpell(StaticFunctionTag*, SpellItem* a_spell)
+	SInt32 GetBoundSpellWeapType(RE::StaticFunctionTag*, RE::SpellItem* a_spell)
 	{
+		using Archetype = RE::EffectSetting::Data::Archetype;
+		using AV = RE::ActorValue;
+
 		if (!a_spell) {
-			_WARNING("[WARNING] a_spell is a NONE form!");
-			return false;
-		}
-
-		MagicItem::EffectItem* effectItem = 0;
-		EffectSetting* effectSetting = 0;
-		for (UInt32 i = 0; i < a_spell->effectItemList.count; ++i) {
-			effectItem = a_spell->effectItemList[i];
-			if (effectItem && effectItem->mgef) {
-				effectSetting = effectItem->mgef;
-				if (effectSetting->properties.school == kActorValue_Restoration && effectSetting->properties.primaryValue == kActorValue_Health) {
-					return true;
-				}
-			}
-		}
-
-		return false;
-	}
-
-
-	bool IsBoundSpell(StaticFunctionTag*, SpellItem* a_spell)
-	{
-		if (!a_spell) {
-			_WARNING("[WARNING] a_spell is a NONE form!");
-			return false;
-		}
-
-		MagicItem::EffectItem* effectItem = 0;
-		EffectSetting* effectSetting = 0;
-		for (UInt32 i = 0; i < a_spell->effectItemList.count; ++i) {
-			effectItem = a_spell->effectItemList[i];
-			if (effectItem && effectItem->mgef) {
-				effectSetting = effectItem->mgef;
-				if (effectSetting->properties.school == kActorValue_Conjuration && effectSetting->properties.archetype == EffectSetting::Properties::kArchetype_BoundWeapon) {
-					return true;
-				}
-			}
-		}
-
-		return false;
-	}
-
-
-	SInt32 GetBoundSpellWeapType(StaticFunctionTag*, SpellItem* a_spell)
-	{
-		if (!a_spell) {
-			_WARNING("[WARNING] a_spell is a NONE form!");
+			_WARNING("a_spell is a NONE form!");
 			return -1;
 		}
 
-		MagicItem::EffectItem* effectItem = 0;
-		EffectSetting* effectSetting = 0;
-		for (UInt32 i = 0; i < a_spell->effectItemList.count; ++i) {
-			effectItem = a_spell->effectItemList[i];
-			if (effectItem && effectItem->mgef) {
-				effectSetting = effectItem->mgef;
-				if (effectSetting->properties.school == kActorValue_Conjuration && effectSetting->properties.archetype == EffectSetting::Properties::kArchetype_BoundWeapon) {
-					if (effectSetting->properties.primaryObject && effectSetting->properties.primaryObject->formType == kFormType_Weapon) {
-						TESObjectWEAP* weap = static_cast<TESObjectWEAP*>(effectSetting->properties.primaryObject);
-						if ((weap->gameData.flags1 & TESObjectWEAP::GameData::kFlags_BoundWeapon) != 0) {
-							return weap->gameData.type;
+		for (auto& effect : a_spell->effects) {
+			if (effect && effect->baseEffect) {
+				auto& data = effect->baseEffect->data;
+				if (data.magicSkill == AV::kConjuration && data.archetype == Archetype::kBoundWeapon) {
+					auto item = data.associatedItem;
+					if (item && item->IsWeapon()) {
+						auto weap = static_cast<RE::TESObjectWEAP*>(item);
+						if (weap->IsBound()) {
+							return static_cast<SInt32>(weap->data.animationType);
 						}
 					}
 				}
@@ -81,16 +32,56 @@ namespace SpellExt
 	}
 
 
-	bool RegisterFuncs(VMClassRegistry* a_registry)
+	bool IsBoundSpell(RE::StaticFunctionTag*, RE::SpellItem* a_spell)
 	{
-		a_registry->RegisterFunction(
-			new NativeFunction1<StaticFunctionTag, bool, SpellItem*>("IsHealingSpell", "iEquip_SpellExt", IsHealingSpell, a_registry));
+		using Archetype = RE::EffectSetting::Data::Archetype;
+		using AV = RE::ActorValue;
 
-		a_registry->RegisterFunction(
-			new NativeFunction1<StaticFunctionTag, bool, SpellItem*>("IsBoundSpell", "iEquip_SpellExt", IsBoundSpell, a_registry));
+		if (!a_spell) {
+			_WARNING("a_spell is a NONE form!");
+			return false;
+		}
 
-		a_registry->RegisterFunction(
-			new NativeFunction1<StaticFunctionTag, SInt32, SpellItem*>("GetBoundSpellWeapType", "iEquip_SpellExt", GetBoundSpellWeapType, a_registry));
+		for (auto& effect : a_spell->effects) {
+			if (effect && effect->baseEffect) {
+				auto& data = effect->baseEffect->data;
+				if (data.magicSkill == AV::kConjuration && data.archetype == Archetype::kBoundWeapon) {
+					return true;
+				}
+			}
+		}
+
+		return false;
+	}
+
+
+	bool IsHealingSpell(RE::StaticFunctionTag*, RE::SpellItem* a_spell)
+	{
+		using AV = RE::ActorValue;
+
+		if (!a_spell) {
+			_WARNING("a_spell is a NONE form!");
+			return false;
+		}
+
+		for (auto& effect : a_spell->effects) {
+			if (effect && effect->baseEffect) {
+				auto& data = effect->baseEffect->data;
+				if (data.magicSkill == AV::kRestoration && data.primaryActorValue == AV::kHealth) {
+					return true;
+				}
+			}
+		}
+
+		return false;
+	}
+
+
+	bool RegisterFuncs(RE::BSScript::Internal::VirtualMachine* a_vm)
+	{
+		a_vm->RegisterFunction("GetBoundSpellWeapType", "iEquip_SpellExt", GetBoundSpellWeapType);
+		a_vm->RegisterFunction("IsBoundSpell", "iEquip_SpellExt", IsBoundSpell);
+		a_vm->RegisterFunction("IsHealingSpell", "iEquip_SpellExt", IsHealingSpell);
 
 		return true;
 	}

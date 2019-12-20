@@ -1,38 +1,70 @@
 #include "LocaleManager.h"
 
-#include "GameSettings.h"  // Setting, GetINISetting
-#include "GameTypes.h"  // BSFixedString
+#include <string>
+#include <fstream>
+#include <map>
+#include <queue>
+#include <stack>
+#include <utility>
+#include <codecvt>
 
-#include <string>  // wstring
-#include <fstream>  // basic_ifstream
-#include <map>  // map
-#include <queue>  // queue
-#include <stack>  // stack
-#include <utility>  // pair
-#include <codecvt>  // codecvt_mode, codecvt_utf16
-
-#include <wchar.h>  // _wcsicmp
-#include <stringapiset.h>  // MultiByteToWideChar, WideCharToMultiByte
-
-
-bool ci_wstring_compare::operator()(const std::wstring& a_lhs, const std::wstring& a_rhs) const
-{
-	return _wcsicmp(a_lhs.c_str(), a_rhs.c_str()) < 0;
-}
+#include "RE/Skyrim.h"
 
 
 LocaleManager* LocaleManager::GetSingleton()
 {
-	if (!_singleton) {
-		_singleton = new LocaleManager();
-	}
-	return _singleton;
+	static LocaleManager singleton;
+	return &singleton;
 }
 
 
-void LocaleManager::Free()
+std::wstring LocaleManager::ConvertStringToWstring(const std::string& a_str)
 {
-	delete _singleton;
+	if (a_str.empty()) {
+		return std::wstring();
+	}
+
+	auto size = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, a_str.c_str(), a_str.length(), NULL, 0);
+	bool err = size == 0;
+	if (!err) {
+		std::wstring strTo;
+		strTo.resize(size);
+		err = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, a_str.c_str(), a_str.length(), strTo.data(), size) == 0;
+		if (!err) {
+			return strTo;
+		}
+	}
+
+	if (err) {
+		_ERROR("MultiByteToWideChar failed with error code (%i)", GetLastError());
+	}
+
+	return std::wstring();
+}
+
+
+std::string LocaleManager::ConvertWStringToString(const std::wstring& a_str)
+{
+	if (a_str.empty()) {
+		return std::string();
+	}
+
+	auto size = WideCharToMultiByte(CP_UTF8, 0, a_str.c_str(), a_str.length(), NULL, 0, NULL, NULL);
+	bool err = size == 0;
+	if (!err) {
+		std::string strTo;
+		strTo.resize(size);
+		err = WideCharToMultiByte(CP_UTF8, 0, a_str.c_str(), a_str.length(), strTo.data(), size, NULL, NULL) == 0;
+		if (!err) {
+			return strTo;
+		}
+	}
+
+	if (err) {
+		_ERROR("WideCharToMultiByte failed with error code (%i)", GetLastError());
+	}
+
+	return std::string();
 }
 
 
@@ -40,35 +72,43 @@ void LocaleManager::Dump()
 {
 	std::string key;
 	std::string value;
-	_DMESSAGE("=== LOCALIZATIONS DUMP BEGIN ===");
 	for (auto& pair : GetLocalizationMap()) {
 		key = ConvertWStringToString(pair.first);
 		value = ConvertWStringToString(pair.second);
 		_DMESSAGE("%s: %s", key.c_str(), value.c_str());
 	}
-	_DMESSAGE("=== LOCALIZATIONS DUMP END ===");
 }
 
 
 void LocaleManager::LoadLocalizationStrings()
 {
-	constexpr char* PREFIX = "Data\\interface\\translations\\iEquip_";
-	constexpr char* ENGLISH = "ENGLISH";
-	constexpr char* FILE_EXT = ".txt";
+	constexpr wchar_t REGEX_PREFIX[] = L"iEquip_";
+	constexpr wchar_t ENGLISH[] = L"ENGLISH";
+	constexpr wchar_t REGEX_POSTFIX[] = L"\\.txt$";
+	constexpr auto REGEX_FLAGS = std::regex_constants::grep | std::regex_constants::icase;
 
-	Setting* language_general = GetINISetting("sLanguage:General");
-	std::string path = PREFIX;
-	std::string language = (language_general && language_general->GetType() == Setting::kType_String) ? language_general->data.s : ENGLISH;
-	bool english = language == ENGLISH;
-	path += language;
-	path += FILE_EXT;
+	std::filesystem::path path("data/interface/translations");
 
-	ReadFromFile(path.c_str(), english);
+	std::wstring pattern(REGEX_PREFIX);
+	std::wstring wLanguage(ENGLISH);
+	auto setting = RE::GetINISetting("sLanguage:General");
+	if (setting) {
+		auto u8Language = setting->GetString();
+		wLanguage = ConvertStringToWstring(u8Language);
+	}
+	pattern += wLanguage;
+	pattern += REGEX_POSTFIX;
+	std::wregex regex(pattern, REGEX_FLAGS);
+
+	bool english = _wcsicmp(ENGLISH, wLanguage.c_str()) == 0;
+
+	FindFiles(path, regex, english);
 	if (!english) {
-		path = PREFIX;
-		path += ENGLISH;
-		path += FILE_EXT;
-		ReadFromFile(path.c_str(), true);
+		pattern = REGEX_PREFIX;
+		pattern += ENGLISH;
+		pattern += REGEX_POSTFIX;
+		regex.assign(pattern, REGEX_FLAGS);
+		FindFiles(path, regex, true);
 	}
 }
 
@@ -81,35 +121,53 @@ std::wstring LocaleManager::GetLocalization(std::wstring a_key)
 
 std::string LocaleManager::GetLocalization(std::string a_key)
 {
-	return ConvertWStringToString(GetLocalization(ConvertStringToWstring(a_key)));
+	auto str = ConvertStringToWstring(a_key);
+	str = GetLocalization(str);
+	return ConvertWStringToString(str);
 }
 
 
-LocaleManager::LocaleManager()
-{}
+bool LocaleManager::ci_wstring_compare::operator()(const std::wstring& a_lhs, const std::wstring& a_rhs) const
+{
+	return _wcsicmp(a_lhs.c_str(), a_rhs.c_str()) < 0;
+}
 
 
-LocaleManager::~LocaleManager()
-{}
+void LocaleManager::FindFiles(const std::filesystem::path& a_path, const std::wregex& a_pattern, bool a_english)
+{
+	std::error_code err;
+	if (!std::filesystem::exists(a_path, err)) {
+		return;
+	}
+
+	std::filesystem::path fileName;
+	for (auto& dirEntry : std::filesystem::directory_iterator(a_path)) {
+		fileName = dirEntry.path().filename();
+		if (std::regex_match(fileName.native(), a_pattern)) {
+			ReadFromFile(dirEntry.path(), a_english);
+		}
+	}
+}
 
 
 #pragma warning(push)
 #pragma warning(disable : 4996)  // codecvt deprecated in c++17
-void LocaleManager::ReadFromFile(const char* a_filePath, bool a_english)
+void LocaleManager::ReadFromFile(const std::filesystem::path& a_path, bool a_english)
 {
-	constexpr std::codecvt_mode cvtMode = std::codecvt_mode(std::little_endian | std::consume_header);
-	constexpr size_type NPOS = std::wstring::npos;
+	constexpr auto CVT_MODE = std::codecvt_mode(std::little_endian | std::consume_header);
+	constexpr auto NPOS = std::wstring::npos;
 
-	LocalizationMap& localizations = a_english ? _localizations_ENG : _localizations_LOC;
-	std::wifstream inFile(a_filePath);
-	inFile.imbue(std::locale(inFile.getloc(), new std::codecvt_utf16<wchar_t, 0x10ffff, cvtMode>));  // UCS-2 LE w/ BOM
+	auto& localizations = a_english ? _localizations_ENG : _localizations_LOC;
+	std::wifstream inFile(a_path);
+	inFile.imbue(std::locale(inFile.getloc(), new std::codecvt_utf16<wchar_t, 0x10FFFF, CVT_MODE>));  // UCS-2 LE w/ BOM
 	std::wstring line;
 	std::wstring key;
 	std::wstring value;
 	if (!inFile.is_open()) {
-		_ERROR("[ERROR] Failed to open file \"%s\"", a_filePath);
+		_ERROR("Failed to open file \"%s\"!\n", a_path.string().c_str());
 		return;
 	}
+
 	while (std::getline(inFile, line)) {
 		if (!line.empty() && line.back() == L'\r') {
 			line.pop_back();  // discard carriage return
@@ -120,21 +178,18 @@ void LocaleManager::ReadFromFile(const char* a_filePath, bool a_english)
 		key.clear();
 		value.clear();
 
-		size_type pos = line.find_first_of(L'{');
+		auto pos = line.find_first_of(L'\t');
 		if (pos != NPOS) {
-			key = std::wstring(line, 0, pos);
-		}
-
-		pos = line.find_first_of(L'\t');
-		if (pos != NPOS) {
-			if (key.empty()) {
-				key = std::wstring(line, 0, pos);
-			}
-			value = std::wstring(line, pos + 1);
+			key = line.substr(0, pos);
+			value = line.substr(pos + 1);
 		}
 
 		if (!key.empty() && !value.empty()) {
-			localizations.insert(std::make_pair(key, value));
+			auto sanitizedKey = SanitizeKey(key);
+			if (sanitizedKey) {
+				key = std::move(*sanitizedKey);
+			}
+			localizations.insert(std::make_pair(std::move(key), std::move(value)));
 		}
 	}
 }
@@ -149,38 +204,72 @@ LocaleManager::LocalizationMap& LocaleManager::GetLocalizationMap()
 
 std::wstring LocaleManager::GetLocalizationInternal(const std::wstring& a_key)
 {
-	typedef std::wstring::size_type size_t;
-
-	if (a_key[0] != L'$') {
+	if (a_key.empty() || a_key[0] != L'$') {
 		return a_key;
 	}
 
-	std::wstring key(a_key, 0, a_key.find_first_of(L'{'));
+	auto sanitizedKey = SanitizeKey(a_key);
+	if (!sanitizedKey) {
+		return a_key;
+	}
 
-	std::stack<size_t> stack;
+	auto localization = FindLocalization(*sanitizedKey);
+	if (!localization) {
+		return a_key;
+	}
+
+	std::stack<size_type> stack;
 	std::queue<std::wstring> queue;
 	if (!GetNestedLocalizations(a_key, stack, queue)) {
-		return a_key;
-	}
-
-	std::pair<std::wstring, bool> localization = FindLocalization(key);
-	if (!localization.second) {
-		return a_key;
+		return *localization;
 	}
 
 	while (!stack.empty()) {
 		stack.pop();
 	}
-	if (InsertLocalizations(localization.first, stack, queue)) {
-		for (size_type i = 0, j = 1; j < localization.first.length(); ++i, ++j) {
-			if (localization.first[i] == L'\\' && localization.first[j] == L'n') {
-				localization.first.replace(i, 2, L"\n");
+	InsertLocalizations(*localization, stack, queue);
+	return *localization;
+}
+
+
+std::optional<std::wstring> LocaleManager::SanitizeKey(std::wstring a_key)
+{
+	std::stack<size_type> stack;
+	for (size_type pos = 0; pos < a_key.size(); ++pos) {
+		switch (a_key[pos]) {
+		case L'{':
+			stack.push(pos);
+			break;
+		case L'}':
+			{
+				switch (stack.size()) {
+				case 0:
+					return std::nullopt;
+				case 1:
+					{
+						size_type last = stack.top();
+						stack.pop();
+						auto off = last + 1;
+						auto count = pos - last - 1;
+						if (count > 0) {
+							a_key.replace(off, count, L"");
+						}
+						pos = off;
+					}
+					break;
+				default:
+					stack.pop();
+				}
+				break;
 			}
 		}
-		return localization.first;
-	} else {
-		return a_key;
 	}
+
+	if (!a_key.empty() && a_key.back() == L'\r') {
+		a_key.pop_back();
+	}
+
+	return std::make_optional(a_key);
 }
 
 
@@ -200,9 +289,12 @@ bool LocaleManager::GetNestedLocalizations(const std::wstring& a_key, std::stack
 					{
 						size_type last = a_stack.top();
 						a_stack.pop();
-						size_type off = last + 1;
-						size_type count = pos - last - 1;
-						std::wstring subStr = (count > 0) ? std::wstring(a_key, off, count) : L"";
+						auto off = last + 1;
+						auto count = pos - last - 1;
+						if (count == 0) {
+							return false;	// nothing to replace {} with
+						}
+						auto subStr = a_key.substr(off, count);
 						a_queue.push(GetLocalizationInternal(subStr));
 					}
 					break;
@@ -218,21 +310,22 @@ bool LocaleManager::GetNestedLocalizations(const std::wstring& a_key, std::stack
 }
 
 
-std::pair<std::wstring, bool> LocaleManager::FindLocalization(const std::wstring& a_key)
+std::optional<std::wstring> LocaleManager::FindLocalization(const std::wstring& a_key)
 {
-	LocalizationMap& localizations = GetLocalizationMap();
+	auto& localizations = GetLocalizationMap();
 	auto it = localizations.find(a_key);
 	if (it == localizations.end()) {
 		if (&localizations != &_localizations_ENG) {
 			it = _localizations_ENG.find(a_key);
 			if (it == _localizations_ENG.end()) {
-				return std::make_pair(L"", false);
+				return std::nullopt;
 			}
 		} else {
-			return std::make_pair(L"", false);
+			return std::nullopt;
 		}
 	}
-	return std::make_pair(it->second, true);
+
+	return std::make_optional(it->second);
 }
 
 
@@ -251,7 +344,7 @@ bool LocaleManager::InsertLocalizations(std::wstring& a_localization, std::stack
 
 				size_type beg = a_stack.top();
 				a_stack.pop();
-				std::wstring subStr = a_queue.front();
+				auto subStr = a_queue.front();
 				a_queue.pop();
 
 				a_localization.replace(beg, pos - beg + 1, subStr);
@@ -263,44 +356,3 @@ bool LocaleManager::InsertLocalizations(std::wstring& a_localization, std::stack
 
 	return true;
 }
-
-
-std::wstring ConvertStringToWstring(const std::string& a_str)
-{
-	if (a_str.empty()) {
-		return std::wstring();
-	}
-
-	int numChars = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, a_str.c_str(), a_str.length(), NULL, 0);
-	std::wstring wstrTo;
-	if (numChars) {
-		wstrTo.resize(numChars);
-		if (MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, a_str.c_str(), a_str.length(), wstrTo.data(), numChars)) {
-			return wstrTo;
-		}
-	}
-
-	return std::wstring();
-}
-
-
-std::string ConvertWStringToString(const std::wstring& a_str)
-{
-	if (a_str.empty()) {
-		return std::string();
-	}
-
-	int numChars = WideCharToMultiByte(CP_UTF8, 0, a_str.c_str(), a_str.length(), NULL, 0, NULL, NULL);
-	std::string strTo;
-	if (numChars) {
-		strTo.resize(numChars);
-		if (WideCharToMultiByte(CP_UTF8, 0, a_str.c_str(), a_str.length(), strTo.data(), numChars, NULL, NULL)) {
-			return strTo;
-		}
-	}
-
-	return std::string();
-}
-
-
-LocaleManager* LocaleManager::_singleton = 0;

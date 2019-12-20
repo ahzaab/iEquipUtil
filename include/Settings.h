@@ -1,45 +1,44 @@
 #pragma once
 
-#include "GameForms.h"  // TESForm
+#include <map>
+#include <string>
 
-#include <map>  // map
-#include <string>  // string, stoi
+#include "RE/Skyrim.h"
 
-#include "Forms.h"  // GetForm
-#include "Json2Settings.h"  // Json2Settings
+#include "Json2Settings.h"
 
 
 template<>
-class aSetting<TESForm*> :
+class aSetting<RE::TESForm*> :
 	public ISetting,
-	public std::map<UInt32, TESForm*>
+	public std::map<UInt32, RE::TESForm*>
 {
 private:
-	using Container = std::map<UInt32, TESForm*>;
+	using Container = std::map<UInt32, RE::TESForm*>;
 
 public:
 	aSetting() = delete;
 
-	aSetting(std::string a_key, bool a_consoleOK, std::initializer_list<Container::value_type> a_list = {}) :
+	aSetting(std::string a_key, std::initializer_list<Container::value_type> a_list = {}, bool a_consoleOK = false) :
 		ISetting(a_key, a_consoleOK),
 		Container(a_list)
 	{}
 
-	virtual ~aSetting()
-	{}
+	virtual ~aSetting() = default;
 
 	virtual void assign(json& a_val) override
 	{
 		clear();
+		auto dataHandler = RE::TESDataHandler::GetSingleton();
 		std::string pluginName;
 		std::string formIDStr;
 		UInt32 formIDNum;
-		TESForm* form = 0;
+		RE::TESForm* form = 0;
 		for (auto& val : a_val) {
 			val.at("pluginName").get_to(pluginName);
 			val.at("formID").get_to(formIDStr);
 			formIDNum = std::stoi(formIDStr, 0, 16);
-			form = GetForm(formIDNum, pluginName.c_str());
+			form = dataHandler->LookupForm(formIDNum, pluginName);
 			if (form) {
 				Container::insert({ form->formID, form });
 			}
@@ -68,20 +67,22 @@ public:
 	static bool loadSettings(bool a_dumpParse = false);
 
 
-	static aSetting<TESForm*> spears;
-	static aSetting<TESForm*> javelins;
-	static aSetting<TESForm*> grenades;
-	static aSetting<TESForm*> throwingAxes;
-	static aSetting<TESForm*> throwingKnives;
-	static aSetting<TESForm*> waxes;
-	static aSetting<TESForm*> oils;
-	static aSetting<TESForm*> spellWards;
-	static aSetting<TESForm*> fire;
-	static aSetting<TESForm*> ice;
-	static aSetting<TESForm*> shock;
-	static aSetting<TESForm*> poison;
-	static aSetting<TESForm*> salves;
-	static aSetting<TESForm*> bandages;
+	static aSetting<RE::TESForm*> bandages;
+	static aSetting<RE::TESForm*> fire;
+	static aSetting<RE::TESForm*> grenades;
+	static aSetting<RE::TESForm*> ice;
+	static aSetting<RE::TESForm*> javelins;
+	static aSetting<RE::TESForm*> oils;
+	static aSetting<RE::TESForm*> poison;
+	static aSetting<RE::TESForm*> rangedSpells;
+	static aSetting<RE::TESForm*> rangedStaves;
+	static aSetting<RE::TESForm*> salves;
+	static aSetting<RE::TESForm*> shock;
+	static aSetting<RE::TESForm*> spears;
+	static aSetting<RE::TESForm*> spellWards;
+	static aSetting<RE::TESForm*> throwingAxes;
+	static aSetting<RE::TESForm*> throwingKnives;
+	static aSetting<RE::TESForm*> waxes;
 
 private:
 	static constexpr char FILE_PREFIX[] = "Data\\SKSE\\Plugins\\";

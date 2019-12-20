@@ -1,15 +1,13 @@
 #pragma once
 
-#include "GameTypes.h"  // BSFixedString
-
-class VMClassRegistry;
-struct StaticFunctionTag;
+#include "RE/Skyrim.h"
 
 
 namespace StringExt
 {
-	BSFixedString	LocalizeString(StaticFunctionTag*, BSFixedString a_str);
-	UInt32			CalcCRC32Hash(StaticFunctionTag*, BSFixedString a_str, UInt32 a_start);
-	BSFixedString	IntToHexString(StaticFunctionTag*, UInt32 a_num);
-	bool			RegisterFuncs(VMClassRegistry* a_registry);
+	UInt32				CalcCRC32Hash(RE::StaticFunctionTag*, RE::BSFixedString a_str, UInt32 a_start);
+	RE::BSFixedString	IntToHexString(RE::StaticFunctionTag*, UInt32 a_num);
+	RE::BSFixedString	LocalizeString(RE::StaticFunctionTag*, RE::BSFixedString a_str);
+
+	bool RegisterFuncs(RE::BSScript::Internal::VirtualMachine* a_vm);
 }

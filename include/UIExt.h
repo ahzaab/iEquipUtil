@@ -1,16 +1,11 @@
 #pragma once
 
-#include "GameTypes.h"  // BSFixedString
-
-class TESForm;
-class VMClassRegistry;
-struct StaticFunctionTag;
+#include "RE/Skyrim.h"
 
 
 namespace UIExt
 {
-	TESForm*	GetFormAtInventoryIndex(StaticFunctionTag*, UInt32 a_index);
-	float		GetShoutFillPct(StaticFunctionTag*);
-	float		GetShoutCooldownTime(StaticFunctionTag*);
-	bool		RegisterFuncs(VMClassRegistry* a_registry);
+	RE::TESForm* GetFormAtInventoryIndex(RE::StaticFunctionTag*, UInt32 a_index);
+
+	bool RegisterFuncs(RE::BSScript::Internal::VirtualMachine* a_vm);
 }

@@ -1,53 +1,45 @@
 #include "StringExt.h"
 
-#include "GameTypes.h"  // BSFixedString
-#include "HashUtil.h"  // CRC32
-#include "PapyrusNativeFunctions.h"  // NativeFunction
-#include "PapyrusVM.h"  // VMClassRegistry
+#include "skse64/HashUtil.h"
 
-#include <cstdio>  // printf
-#include <cstring>  // strlen
+#include <cstdio>
+#include <cstring>
 
-#include "LocaleManager.h"  // LocaleManager
+#include "LocaleManager.h"
 
 
 namespace StringExt
 {
-	BSFixedString LocalizeString(StaticFunctionTag*, BSFixedString a_str)
+	UInt32 CalcCRC32Hash(RE::StaticFunctionTag*, RE::BSFixedString a_str, UInt32 a_start)
 	{
-		if (!a_str.data) {
-			_ERROR("[ERROR] String data was invalid!\n");
-		}
-
-		LocaleManager* locManager = LocaleManager::GetSingleton();
-		return BSFixedString(locManager->GetLocalization(a_str.data).c_str());
+		return HashUtil::CRC32(a_str.c_str(), a_start);
 	}
 
 
-	UInt32 CalcCRC32Hash(StaticFunctionTag*, BSFixedString a_str, UInt32 a_start)
+	RE::BSFixedString IntToHexString(RE::StaticFunctionTag*, UInt32 a_num)
 	{
-		return HashUtil::CRC32(a_str.data, a_start);
-	}
-
-
-	BSFixedString IntToHexString(StaticFunctionTag*, UInt32 a_num)
-	{
-		char buf[9] = { '\0' };
+		char buf[] = "DEADBEEF";
 		std::snprintf(buf, sizeof(buf), "%08X", a_num);
 		return buf;
 	}
 
 
-	bool RegisterFuncs(VMClassRegistry* a_registry)
+	RE::BSFixedString LocalizeString(RE::StaticFunctionTag*, RE::BSFixedString a_str)
 	{
-		a_registry->RegisterFunction(
-			new NativeFunction1<StaticFunctionTag, BSFixedString, BSFixedString>("LocalizeString", "iEquip_StringExt", LocalizeString, a_registry));
+		if (a_str.empty()) {
+			_ERROR("String was empty!\n");
+		}
 
-		a_registry->RegisterFunction(
-			new NativeFunction2<StaticFunctionTag, UInt32, BSFixedString, UInt32>("CalcCRC32Hash", "iEquip_StringExt", CalcCRC32Hash, a_registry));
+		auto loc = LocaleManager::GetSingleton();
+		return loc->GetLocalization(a_str.c_str()).c_str();
+	}
 
-		a_registry->RegisterFunction(
-			new NativeFunction1<StaticFunctionTag, BSFixedString, UInt32>("IntToHexString", "iEquip_StringExt", IntToHexString, a_registry));
+
+	bool RegisterFuncs(RE::BSScript::Internal::VirtualMachine* a_vm)
+	{
+		a_vm->RegisterFunction("CalcCRC32Hash", "iEquip_StringExt", CalcCRC32Hash);
+		a_vm->RegisterFunction("IntToHexString", "iEquip_StringExt", IntToHexString);
+		a_vm->RegisterFunction("LocalizeString", "iEquip_StringExt", LocalizeString);
 
 		return true;
 	}

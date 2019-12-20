@@ -1,9 +1,9 @@
 #include "Settings.h"
 
-#include <fileapi.h>  // FindFirstFile, FindNextFile
+#include <fileapi.h>
 
-#include <cstring>  // memset
-#include <string>  // string
+#include <cstring>
+#include <string>
 
 
 bool Settings::loadSettings(bool a_dumpParse)
@@ -19,7 +19,7 @@ bool Settings::loadSettings(bool a_dumpParse)
 		do {
 			fileName = FILE_PREFIX;
 			fileName += findData.cFileName;
-			if (!Json2Settings::Settings::loadSettings(fileName.c_str(), true, a_dumpParse)) {
+			if (!Json2Settings::Settings::loadSettings(fileName.c_str(), a_dumpParse, true)) {
 				result = false;
 			}
 		} while (result && FindNextFile(handle, &findData));
@@ -30,17 +30,19 @@ bool Settings::loadSettings(bool a_dumpParse)
 }
 
 
-decltype(Settings::spears)			Settings::spears("spears", false);
-decltype(Settings::javelins)		Settings::javelins("javelins", false);
-decltype(Settings::grenades)		Settings::grenades("grenades", false);
-decltype(Settings::throwingAxes)	Settings::throwingAxes("throwingAxes", false);
-decltype(Settings::throwingKnives)	Settings::throwingKnives("throwingKnives", false);
-decltype(Settings::waxes)			Settings::waxes("waxes", false);
-decltype(Settings::oils)			Settings::oils("oils", false);
-decltype(Settings::spellWards)		Settings::spellWards("spellWards", false);
-decltype(Settings::fire)			Settings::fire("fire", false);
-decltype(Settings::ice)				Settings::ice("ice", false);
-decltype(Settings::shock)			Settings::shock("shock", false);
-decltype(Settings::poison)			Settings::poison("poison", false);
-decltype(Settings::salves)			Settings::salves("salves", false);
-decltype(Settings::bandages)		Settings::bandages("bandages", false);
+decltype(Settings::bandages)		Settings::bandages("bandages");
+decltype(Settings::fire)			Settings::fire("fire");
+decltype(Settings::grenades)		Settings::grenades("grenades");
+decltype(Settings::ice)				Settings::ice("ice");
+decltype(Settings::javelins)		Settings::javelins("javelins");
+decltype(Settings::oils)			Settings::oils("oils");
+decltype(Settings::poison)			Settings::poison("poison");
+decltype(Settings::rangedSpells)	Settings::rangedSpells("rangedSpells");
+decltype(Settings::rangedStaves)	Settings::rangedStaves("rangedStaves");
+decltype(Settings::salves)			Settings::salves("salves");
+decltype(Settings::shock)			Settings::shock("shock");
+decltype(Settings::spears)			Settings::spears("spears");
+decltype(Settings::spellWards)		Settings::spellWards("spellWards");
+decltype(Settings::throwingAxes)	Settings::throwingAxes("throwingAxes");
+decltype(Settings::throwingKnives)	Settings::throwingKnives("throwingKnives");
+decltype(Settings::waxes)			Settings::waxes("waxes");

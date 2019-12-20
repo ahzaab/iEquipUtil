@@ -1,25 +1,13 @@
 #pragma once
 
-class SpellItem;
-class VMClassRegistry;
-struct StaticFunctionTag;
+#include "RE/Skyrim.h"
 
 
 namespace SpellExt
 {
-	namespace
-	{
-		enum ActorValue : UInt32
-		{
-			kActorValue_Conjuration = 19,
-			kActorValue_Restoration = 22,
-			kActorValue_Health = 24
-		};
-	}
+	SInt32	GetBoundSpellWeapType(RE::StaticFunctionTag*, RE::SpellItem* a_spell);
+	bool	IsBoundSpell(RE::StaticFunctionTag*, RE::SpellItem* a_spell);
+	bool	IsHealingSpell(RE::StaticFunctionTag*, RE::SpellItem* a_spell);
 
-
-	bool	IsHealingSpell(StaticFunctionTag*, SpellItem* a_spell);
-	bool	IsBoundSpell(StaticFunctionTag*, SpellItem* a_spell);
-	SInt32	GetBoundSpellWeapType(StaticFunctionTag*, SpellItem* a_spell);
-	bool	RegisterFuncs(VMClassRegistry* a_registry);
+	bool RegisterFuncs(RE::BSScript::Internal::VirtualMachine* a_vm);
 }

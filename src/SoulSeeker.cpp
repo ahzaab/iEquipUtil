@@ -1,43 +1,34 @@
 #include "SoulSeeker.h"
 
-#include "GameAPI.h"  // g_thePlayer
-#include "GameBSExtraData.h"  // BaseExtraList
-#include "GameExtraData.h"  // ExtraContainerChanges, InventoryEntryData
-#include "GameForms.h"  // FormType
-#include "GameObjects.h"  // TESSoulGem
-#include "GameReferences.h"  // TESObjectREFR
-#include "PapyrusNativeFunctions.h"  // StaticFunctionTag
-#include "PapyrusVM.h"  // VMClassRegistry
-
-#include <cmath>  // powf, sqrtf
-#include <cstdlib>  // size_t
-#include <limits>  // numeric_limits
-
-#include "InventoryUtil.h"
-#include "SKSEInterface.h"
-
-#include "RE/BSTList.h"  // BSSimpleList
-#include "RE/TESObjectREFR.h"  // RE::TESObjectREFR
+#include <cassert>
+#include <cmath>
+#include <cstdlib>
+#include <limits>
 
 
 namespace SoulSeeker
 {
 	namespace
 	{
-		SoulLevel GetSoulLevel(InventoryEntryData* a_entryData)
+		RE::TESSoulGem* SoulGem::GetSoulGem()
 		{
-#if _WIN64
-			return static_cast<SoulLevel>(CALL_MEMBER_FN(a_entryData, GetSoulLevel)());
-#else
-			using func_t = UInt32(InventoryEntryData::*)();
-			union
-			{
-				std::uintptr_t addr;
-				func_t func;
-			};
-			addr = 0x004756F0;
-			return static_cast<SoulLevel>((a_entryData->*func)());
-#endif
+			assert(entryData && entryData->object && entryData->object->IsSoulGem());
+			return static_cast<RE::TESSoulGem*>(entryData->object);
+		}
+
+
+		void SoulGem::RemoveExtraSoul()
+		{
+			if (entryData->extraLists) {
+				for (auto& xList : *entryData->extraLists) {
+					auto xSoul = xList->GetByType<RE::ExtraSoul>();
+					if (xSoul) {
+						xList->Remove(xSoul);
+						delete xSoul;
+						break;
+					}
+				}
+			}
 		}
 
 
@@ -72,10 +63,10 @@ namespace SoulSeeker
 		}
 
 
-		bool ValidateParams(SoulLevel a_reqCharge, FillMethod a_fillMethod)
+		bool ValidateParams(RE::SoulLevel a_reqCharge, FillMethod a_fillMethod)
 		{
-			if (a_reqCharge < SoulLevel::kPetty || a_reqCharge > SoulLevel::kGrand) {
-				_WARNING("[WARNING] Invalid soul size! (%i)", to_underlying(a_reqCharge));
+			if (a_reqCharge < RE::SoulLevel::kPetty || a_reqCharge > RE::SoulLevel::kGrand) {
+				_WARNING("Invalid soul size! (%i)", to_underlying(a_reqCharge));
 				return false;
 			}
 
@@ -84,7 +75,7 @@ namespace SoulSeeker
 			case FillMethod::kUseLargestSoul:
 				break;
 			default:
-				_WARNING("[WARNING] Invalid fill method! (%i)", to_underlying(a_fillMethod));
+				_WARNING("Invalid fill method! (%i)", to_underlying(a_fillMethod));
 				return false;
 			}
 
@@ -92,30 +83,16 @@ namespace SoulSeeker
 		}
 
 
-		void RemoveExtraSoul(InventoryEntryData* a_entry)
+		bool IsReusable(RE::TESSoulGem* a_gem)
 		{
-			if (a_entry->extendDataList) {
-				RE::BSSimpleList<BaseExtraList*>* extendDataList = (RE::BSSimpleList<BaseExtraList*>*)a_entry->extendDataList;
-				ExtraSoul* xSoul = 0;
-				for (auto& xList : *extendDataList) {
-					xSoul = static_cast<ExtraSoul*>(xList->GetByType(kExtraData_Soul));
-					if (xSoul) {
-						xList->Remove(kExtraData_Soul, xSoul);
-						break;
-					}
-				}
-			}
+			using Object = RE::BGSDefaultObjectManager::DefaultObject;
+			auto dobj = RE::BGSDefaultObjectManager::GetSingleton();
+			auto reusableSoulGem = dobj->GetObject<RE::BGSKeyword>(Object::kReusableSoulGem);
+			return a_gem->HasKeyword(reusableSoulGem);
 		}
 
 
-		bool IsReusable(TESSoulGem* a_gem)
-		{
-			BGSKeyword* ReusableSoulGem = static_cast<BGSKeyword*>(LookupFormByID(kReusableSoulGem));
-			return a_gem->keyword.HasKeyword(ReusableSoulGem);
-		}
-
-
-		void ApplyVerticalShift(SoulLevel a_reqCharge, FillMethod a_fillMethod, GemList& a_gems)
+		void ApplyVerticalShift(RE::SoulLevel a_reqCharge, FillMethod a_fillMethod, GemList& a_gems)
 		{
 			switch (a_fillMethod) {
 			case FillMethod::kSmallerSoulsFirst:
@@ -126,7 +103,7 @@ namespace SoulSeeker
 			case FillMethod::kUseLargestSoul:
 				for (auto& gem : a_gems) {
 					if (gem.soulSize < a_reqCharge) {
-						gem.soulSize = a_reqCharge - gem.soulSize + SoulLevel::kGrand;
+						gem.soulSize = a_reqCharge - gem.soulSize + RE::SoulLevel::kGrand;
 					}
 				}
 				break;
@@ -134,67 +111,79 @@ namespace SoulSeeker
 		}
 
 
-		GemList ParseInventory(RE::BSSimpleList<InventoryEntryData*>& a_entryList, bool a_partialFill)
+		GemList ParseContainer(RE::TESObjectREFR* a_container, bool a_partialFill)
 		{
+			auto inv = a_container->GetInventory([](RE::TESBoundObject* a_object) -> bool
+			{
+				return a_object->IsSoulGem();
+			});
+
 			GemList acceptedGems;
 			GemList rejectedGems;
-			for (auto& entry : a_entryList) {
-				if (entry->type && entry->type->formType == kFormType_SoulGem) {
-					TESSoulGem* soulGem = static_cast<TESSoulGem*>(entry->type);
-					SoulLevel gemSize = static_cast<SoulLevel>(soulGem->gemSize);
-					SoulLevel soulSize = GetSoulLevel(entry);
-					if (soulSize > SoulLevel::kNone) {
-						SoulGem gem(gemSize, soulSize, entry);
-						if (!a_partialFill) {
-							if (gem.soulSize == gem.gemSize) {
-								acceptedGems.push_back(gem);
-							} else {
-								rejectedGems.push_back(gem);
-							}
+			auto considerGem = [&](SoulGem a_soulGem) -> void
+			{
+				if (a_soulGem.soulSize > RE::SoulLevel::kNone) {
+					if (!a_partialFill) {
+						if (a_soulGem.soulSize == a_soulGem.gemSize) {
+							acceptedGems.emplace_back(std::move(a_soulGem));
 						} else {
-							acceptedGems.push_back(gem);
+							rejectedGems.emplace_back(std::move(a_soulGem));
 						}
+					} else {
+						acceptedGems.emplace_back(std::move(a_soulGem));
+					}
+				}
+			};
+
+			for (auto& item : inv) {
+				auto entryData = item.second.second;
+				if (entryData->extraLists) {
+					auto soulGem = static_cast<RE::TESSoulGem*>(entryData->object);
+					auto gemSize = soulGem->GetMaximumCapacity();
+
+					SInt32 rawCount = item.second.first;
+					for (auto& xList : *entryData->extraLists) {
+						auto xSoul = xList->GetByType<RE::ExtraSoul>();
+						if (xSoul) {
+							auto soulSize = xSoul->containedSoul;
+							considerGem({ gemSize, soulSize, entryData, xList });
+						}
+						rawCount -= xList->GetCount();
+					}
+
+					if (rawCount > 0) {
+						auto soulSize = soulGem->containedSoul;
+						considerGem({ gemSize, soulSize, entryData, 0 });
 					}
 				}
 			}
+
 			return acceptedGems.empty() ? rejectedGems : acceptedGems;
 		}
 	}
 
 
-	SInt32 BringMeASoul(StaticFunctionTag*, UInt32 a_reqCharge, UInt32 a_fillMethod, bool a_partialFill, bool a_wasteOK)
+	SInt32 BringMeASoul(RE::StaticFunctionTag*, UInt32 a_reqCharge, UInt32 a_fillMethod, bool a_partialFill, bool a_wasteOK)
 	{
 		using RemoveType = RE::TESObjectREFR::RemoveType;
 
-		SoulLevel reqCharge = static_cast<SoulLevel>(a_reqCharge);
-		FillMethod fillMethod = static_cast<FillMethod>(a_fillMethod);
+		auto reqCharge = static_cast<RE::SoulLevel>(a_reqCharge);
+		auto fillMethod = static_cast<FillMethod>(a_fillMethod);
 		if (!ValidateParams(reqCharge, fillMethod)) {
-			_WARNING("[WARNING] Parameters failed to validate!");
+			_WARNING("Parameters failed to validate!");
 			return -1;
 		}
 
-		ExtraContainerChanges* containerChanges = static_cast<ExtraContainerChanges*>((*g_thePlayer)->extraData.GetByType(kExtraData_ContainerChanges));
-		auto invChanges = containerChanges ? containerChanges->data : 0;
-		if (!invChanges) {
-			_ERROR("[ERROR] No inventory changes!\n");
-			return -1;
-		}
-
-		RE::BSSimpleList<InventoryEntryData*>* entryList = reinterpret_cast<RE::BSSimpleList<InventoryEntryData*>*>(invChanges->objList);
-		if (!entryList) {
-			_ERROR("[ERROR] No entry list!\n");
-			return -1;
-		}
-
-		GemList gems = ParseInventory(*entryList, a_partialFill);
+		auto player = RE::PlayerCharacter::GetSingleton();
+		auto gems = ParseContainer(player, a_partialFill);
 		if (gems.empty()) {
-			_ERROR("[ERROR] Found no soul gems!\n");
+			_ERROR("No soul gems found!\n");
 			return -1;
 		}
 
 		ApplyVerticalShift(reqCharge, fillMethod, gems);
 
-		SoulGem idealGem(reqCharge, reqCharge, 0);
+		SoulGem idealGem(reqCharge, reqCharge, 0, 0);
 		SoulGem foundGem;
 		if (!a_wasteOK) {
 			GemList noWaste;
@@ -212,32 +201,20 @@ namespace SoulSeeker
 			foundGem = NearestNeighbour(gems, idealGem);
 		}
 
-		RemoveExtraSoul(foundGem.entryData);
+		foundGem.RemoveExtraSoul();
 
-		TESSoulGem* gem = static_cast<TESSoulGem*>(foundGem.entryData->type);
+		auto gem = foundGem.GetSoulGem();
 		if (!IsReusable(gem)) {
-			UInt32 gemID = gem->formID;
-			SKSE::AddTask([gemID]()
-			{
-				auto gem = static_cast<TESSoulGem*>(LookupFormByID(gemID));
-				if (!gem) {
-					_WARNING("[WARNING] Failed to lookup gem by form id!");
-					return;
-				}
-
-				RE::TESObjectREFR* objRef = reinterpret_cast<RE::TESObjectREFR*>(*g_thePlayer);
-				UInt32 droppedHandle;
-				objRef->RemoveItem(droppedHandle, gem, 1, RemoveType::kRemove, 0, 0);
-			});
+			UInt32 droppedHandle;
+			player->RemoveItem(droppedHandle, gem, 1, RemoveType::kRemove, foundGem.extraList, 0);
 		}
-		return static_cast<UInt32>(foundGem.origSoulSize);
+		return to_underlying(foundGem.origSoulSize);
 	}
 
 
-	bool RegisterFuncs(VMClassRegistry* a_registry)
+	bool RegisterFuncs(RE::BSScript::Internal::VirtualMachine* a_vm)
 	{
-		a_registry->RegisterFunction(
-			new NativeFunction4<StaticFunctionTag, SInt32, UInt32, UInt32, bool, bool>("BringMeASoul", "iEquip_SoulSeeker", BringMeASoul, a_registry));
+		a_vm->RegisterFunction("BringMeASoul", "iEquip_SoulSeeker", BringMeASoul);
 
 		return true;
 	}

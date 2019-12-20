@@ -1,12 +1,11 @@
 #pragma once
 
-struct StaticFunctionTag;
-class TESAmmo;
-class VMClassRegistry;
+#include "RE/Skyrim.h"
 
 
 namespace AmmoExt
 {
-	bool	IsAmmoBound(StaticFunctionTag*, TESAmmo* a_ammo);
-	bool	RegisterFuncs(VMClassRegistry* a_registry);
+	bool IsAmmoBound(RE::StaticFunctionTag*, RE::TESAmmo* a_ammo);
+
+	bool RegisterFuncs(RE::BSScript::Internal::VirtualMachine* a_vm);
 }
