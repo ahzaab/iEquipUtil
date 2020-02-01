@@ -5,6 +5,11 @@
 
 namespace ActorExt
 {
+	using VM = RE::BSScript::IVirtualMachine;
+	using StackID = RE::VMStackID;
+	using Severity = RE::BSScript::ErrorLogger::Severity;
+
+
 	namespace
 	{
 		enum class Hand : UInt32
@@ -17,11 +22,11 @@ namespace ActorExt
 	}
 
 
-	float				GetAVDamage(RE::StaticFunctionTag*, RE::Actor* a_actor, UInt32 a_actorValue);
-	RE::TESRace*		GetBaseRace(RE::StaticFunctionTag*, RE::Actor* a_actor);
-	RE::TESAmmo*		GetEquippedAmmo(RE::StaticFunctionTag*, RE::Actor* a_actor);
-	RE::TESObjectWEAP*	GetEquippedWeapon(RE::StaticFunctionTag*, RE::Actor* a_actor, UInt32 a_hand);
-	float				GetMagicEffectMagnitude(RE::StaticFunctionTag*, RE::Actor* a_actor, RE::EffectSetting* a_mgef);
+	float				GetAVDamage(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, const RE::Actor* a_actor, UInt32 a_actorValue);
+	RE::TESRace*		GetBaseRace(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, const RE::Actor* a_actor);
+	RE::TESAmmo*		GetEquippedAmmo(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, const RE::Actor* a_actor);
+	RE::TESObjectWEAP*	GetEquippedWeapon(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, const RE::Actor* a_actor, UInt32 a_hand);
+	float				GetMagicEffectMagnitude(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, RE::Actor* a_actor, const RE::EffectSetting* a_mgef);
 
-	bool RegisterFuncs(RE::BSScript::Internal::VirtualMachine* a_vm);
+	bool RegisterFuncs(VM* a_vm);
 }

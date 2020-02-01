@@ -3,24 +3,24 @@
 
 namespace AmmoExt
 {
-	bool IsAmmoBound(RE::StaticFunctionTag*, RE::TESAmmo* a_ammo)
+	bool IsAmmoBound(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, const RE::TESAmmo* a_ammo)
 	{
-		using Object = RE::BGSDefaultObjectManager::DefaultObject;
+		using Object = RE::DEFAULT_OBJECT;
 
 		if (!a_ammo) {
-			_WARNING("a_ammo is a NONE form!");
+			a_vm->TraceStack("a_ammo is a NONE form!", a_stackID, Severity::kWarning);
 			return false;
 		}
 
 		auto dobj = RE::BGSDefaultObjectManager::GetSingleton();
-		auto weapTypeBoundArrow = dobj->GetObject<RE::BGSKeyword>(Object::kWeapTypeBoundArrow);
+		auto weapTypeBoundArrow = dobj->GetObject<RE::BGSKeyword>(Object::kKeywordWeaponTypeBoundArrow);
 		return a_ammo->HasKeyword(weapTypeBoundArrow);
 	}
 
 
-	bool RegisterFuncs(RE::BSScript::Internal::VirtualMachine* a_vm)
+	bool RegisterFuncs(VM* a_vm)
 	{
-		a_vm->RegisterFunction("IsAmmoBound", "iEquip_AmmoExt", IsAmmoBound);
+		a_vm->RegisterFunction("IsAmmoBound", "iEquip_AmmoExt", IsAmmoBound, true);
 
 		return true;
 	}

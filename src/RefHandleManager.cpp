@@ -83,7 +83,7 @@ bool RefHandleManager::Load(SKSE::SerializationInterface* a_intfc, UInt32 a_vers
 }
 
 
-auto RefHandleManager::ActivateAndDispatch(RE::TESForm* a_item, RE::ExtraDataList*& a_extraList, SInt32 a_count)
+auto RefHandleManager::ActivateAndDispatch(const RE::TESForm* a_item, RE::ExtraDataList*& a_extraList, SInt32 a_count)
 -> HandleResult
 {
 	assert(a_item);
@@ -103,7 +103,7 @@ auto RefHandleManager::ActivateAndDispatch(RE::TESForm* a_item, RE::ExtraDataLis
 }
 
 
-auto RefHandleManager::ActivateAndDispatch(RE::TESForm* a_item, RE::ExtraDataList& a_extraList, SInt32 a_count)
+auto RefHandleManager::ActivateAndDispatch(const RE::TESForm* a_item, RE::ExtraDataList& a_extraList, SInt32 a_count)
 -> HandleResult
 {
 	assert(a_item);
@@ -119,7 +119,7 @@ auto RefHandleManager::ActivateAndDispatch(RE::TESForm* a_item, RE::ExtraDataLis
 }
 
 
-bool RefHandleManager::InvalidateAndDispatch(RE::TESForm* a_item, UniqueID a_uniqueID)
+bool RefHandleManager::InvalidateAndDispatch(const RE::TESForm* a_item, UniqueID a_uniqueID)
 {
 	assert(a_item);
 	Locker locker(_lock);
@@ -140,7 +140,7 @@ bool RefHandleManager::InvalidateAndDispatch(RE::TESForm* a_item, UniqueID a_uni
 }
 
 
-bool RefHandleManager::TryInvalidateAndDispatch(RE::TESForm* a_item, RE::ExtraDataList* a_extraList)
+bool RefHandleManager::TryInvalidateAndDispatch(const RE::TESForm* a_item, RE::ExtraDataList* a_extraList)
 {
 	assert(a_item);
 	assert(a_extraList);
@@ -157,7 +157,7 @@ bool RefHandleManager::TryInvalidateAndDispatch(RE::TESForm* a_item, RE::ExtraDa
 auto RefHandleManager::LookupEntry(RE::TESForm* a_item, RefHandle a_handle)
 	-> std::optional<EntryData>
 {
-	auto object = a_item->As<RE::TESBoundObject*>();
+	auto object = a_item->As<RE::TESBoundObject>();
 	if (!object) {
 		_ERROR("Form is not a bound object!\n");
 		return std::nullopt;
@@ -189,12 +189,12 @@ auto RefHandleManager::LookupEntry(RE::TESForm* a_item, RefHandle a_handle)
 	}
 
 	std::optional<EntryData> result;
-	auto entryData = invIt->second.second;
+	auto& entryData = invIt->second.second;
 	if (entryData->extraLists) {
 		for (auto& xList : *entryData->extraLists) {
 			auto xID = xList->GetByType<RE::ExtraUniqueID>();
 			if (xID && xID->uniqueID == idToFind) {
-				result.emplace(entryData, xList);
+				result.emplace(entryData.get(), xList);
 				break;
 			}
 		}
@@ -250,17 +250,17 @@ RefHandleManager::RefHandleManager() :
 {}
 
 
-auto RefHandleManager::ReceiveEvent(RE::TESUniqueIDChangeEvent* a_event, RE::BSTEventSource<RE::TESUniqueIDChangeEvent>* a_dispatcher)
+auto RefHandleManager::ProcessEvent(const RE::TESUniqueIDChangeEvent* a_event, RE::BSTEventSource<RE::TESUniqueIDChangeEvent>* a_dispatcher)
 	-> EventResult
 {
 	if (!IsInit() || !a_event) {
 		return EventResult::kContinue;
 	}
 
-	if ((a_event->oldOwnerID != kPlayerRefID && a_event->newOwnerID != kPlayerRefID) || a_event->oldUniqueID == a_event->newUniqueID) {
+	if ((a_event->oldBaseID != kPlayerRefID && a_event->newBaseID != kPlayerRefID) || a_event->oldUniqueID == a_event->newUniqueID) {
 		return EventResult::kContinue;
 	}
-	auto item = RE::TESForm::LookupByID(a_event->itemID);
+	auto item = RE::TESForm::LookupByID(a_event->objectID);
 
 	Locker locker(_lock);
 
@@ -293,13 +293,13 @@ auto RefHandleManager::ReceiveEvent(RE::TESUniqueIDChangeEvent* a_event, RE::BST
 }
 
 
-auto RefHandleManager::ActivateAndDispatch(RE::TESForm* a_item, RE::ExtraDataList& a_extraList, SInt32 a_count, RefHandle a_handle)
+auto RefHandleManager::ActivateAndDispatch(const RE::TESForm* a_item, RE::ExtraDataList& a_extraList, SInt32 a_count, RefHandle a_handle)
 -> HandleResult
 {
 	auto xID = a_extraList.GetByType<RE::ExtraUniqueID>();
 	if (!xID) {
 		xID = new RE::ExtraUniqueID();
-		xID->owner = kPlayerRefID;
+		xID->baseID = kPlayerRefID;
 		xID->uniqueID = GetNextUniqueID();
 		a_extraList.Add(xID);
 	}

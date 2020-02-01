@@ -18,7 +18,7 @@ LocaleManager* LocaleManager::GetSingleton()
 }
 
 
-std::wstring LocaleManager::ConvertStringToWstring(const std::string& a_str)
+std::wstring LocaleManager::ConvertStringToWString(const std::string& a_str)
 {
 	if (a_str.empty()) {
 		return std::wstring();
@@ -94,7 +94,7 @@ void LocaleManager::LoadLocalizationStrings()
 	auto setting = RE::GetINISetting("sLanguage:General");
 	if (setting) {
 		auto u8Language = setting->GetString();
-		wLanguage = ConvertStringToWstring(u8Language);
+		wLanguage = ConvertStringToWString(u8Language);
 	}
 	pattern += wLanguage;
 	pattern += REGEX_POSTFIX;
@@ -121,7 +121,7 @@ std::wstring LocaleManager::GetLocalization(std::wstring a_key)
 
 std::string LocaleManager::GetLocalization(std::string a_key)
 {
-	auto str = ConvertStringToWstring(a_key);
+	auto str = ConvertStringToWString(a_key);
 	str = GetLocalization(str);
 	return ConvertWStringToString(str);
 }

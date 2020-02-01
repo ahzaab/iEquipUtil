@@ -29,10 +29,10 @@ private:
 
 // 1. Weapon
 // 2. Equip slot
-class OnBoundWeaponUnequippedRegSet : public SKSE::RegistrationSet<RE::TESObjectWEAP*, UInt32>
+class OnBoundWeaponUnequippedRegSet : public SKSE::RegistrationSet<const RE::TESObjectWEAP*, UInt32>
 {
 public:
-	using Base = SKSE::RegistrationSet<RE::TESObjectWEAP*, UInt32>;
+	using Base = SKSE::RegistrationSet<const RE::TESObjectWEAP*, UInt32>;
 
 
 	static OnBoundWeaponUnequippedRegSet* GetSingleton();
@@ -51,10 +51,10 @@ private:
 // 1. Base item
 // 2. Ref handle
 // 2. Item count
-class OnRefHandleActiveRegSet : public SKSE::RegistrationSet<RE::TESForm*, UInt32, SInt32>
+class OnRefHandleActiveRegSet : public SKSE::RegistrationSet<const RE::TESForm*, UInt32, SInt32>
 {
 public:
-	using Base = SKSE::RegistrationSet<RE::TESForm*, UInt32, SInt32>;
+	using Base = SKSE::RegistrationSet<const RE::TESForm*, UInt32, SInt32>;
 
 
 	static OnRefHandleActiveRegSet* GetSingleton();
@@ -72,10 +72,10 @@ private:
 
 // 1. Base item
 // 2. Ref handle
-class OnRefHandleInvalidatedRegSet : public SKSE::RegistrationSet<RE::TESForm*, UInt32>
+class OnRefHandleInvalidatedRegSet : public SKSE::RegistrationSet<const RE::TESForm*, UInt32>
 {
 public:
-	using Base = SKSE::RegistrationSet<RE::TESForm*, UInt32>;
+	using Base = SKSE::RegistrationSet<const RE::TESForm*, UInt32>;
 	using RefHandle = RefHandleManager::RefHandle;
 
 

@@ -7,8 +7,16 @@
 
 namespace SoulSeeker
 {
+	using VM = RE::BSScript::IVirtualMachine;
+	using StackID = RE::VMStackID;
+	using Severity = RE::BSScript::ErrorLogger::Severity;
+
+
 	namespace
 	{
+		using SoulLevel = RE::SOUL_LEVEL;
+
+
 		enum class FillMethod : UInt32
 		{
 			kSmallerSoulsFirst = 0,
@@ -19,11 +27,11 @@ namespace SoulSeeker
 		struct SoulGem
 		{
 			constexpr SoulGem() :
-				SoulGem(RE::SoulLevel::kNone, RE::SoulLevel::kNone, 0, 0)
+				SoulGem(SoulLevel::kNone, SoulLevel::kNone, 0, 0)
 			{}
 
 
-			constexpr SoulGem(RE::SoulLevel a_gemSize, RE::SoulLevel a_soulSize, RE::InventoryEntryData* a_entryData, RE::ExtraDataList* a_extraList) :
+			constexpr SoulGem(SoulLevel a_gemSize, SoulLevel a_soulSize, RE::InventoryEntryData* a_entryData, RE::ExtraDataList* a_extraList) :
 				gemSize(a_gemSize),
 				soulSize(a_soulSize),
 				origSoulSize(a_soulSize),
@@ -36,9 +44,9 @@ namespace SoulSeeker
 			void			RemoveExtraSoul();
 
 
-			RE::SoulLevel			gemSize;
-			RE::SoulLevel			soulSize;
-			RE::SoulLevel			origSoulSize;
+			SoulLevel				gemSize;
+			SoulLevel				soulSize;
+			SoulLevel				origSoulSize;
 			RE::InventoryEntryData*	entryData;
 			RE::ExtraDataList*		extraList;
 		};
@@ -48,14 +56,14 @@ namespace SoulSeeker
 
 
 		const SoulGem&	NearestNeighbour(const GemList& a_gems, const SoulGem& a_comp);
-		bool			ValidateParams(RE::SoulLevel a_reqCharge, FillMethod a_fillMethod);
+		bool			ValidateParams(SoulLevel a_reqCharge, FillMethod a_fillMethod);
 		bool			IsReusable(RE::TESSoulGem* a_gem);
-		void			ApplyVerticalShift(RE::SoulLevel a_reqCharge, FillMethod a_fillMethod, GemList& a_gems);
+		void			ApplyVerticalShift(SoulLevel a_reqCharge, FillMethod a_fillMethod, GemList& a_gems);
 		GemList			ParseContainer(RE::TESObjectREFR* a_container, bool a_partialFill);
 	}
 
 
-	SInt32 BringMeASoul(RE::StaticFunctionTag*, UInt32 a_reqCharge, UInt32 a_fillMethod, bool a_partialFill, bool a_wasteOK);
+	SInt32 BringMeASoul(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, UInt32 a_reqCharge, UInt32 a_fillMethod, bool a_partialFill, bool a_wasteOK);
 
-	bool RegisterFuncs(RE::BSScript::Internal::VirtualMachine* a_vm);
+	bool RegisterFuncs(VM* a_vm);
 }

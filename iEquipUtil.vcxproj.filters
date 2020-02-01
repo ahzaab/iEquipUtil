@@ -58,6 +58,9 @@
     <ClCompile Include="src\Papyrus.cpp">
       <Filter>src\papyrus</Filter>
     </ClCompile>
+    <ClCompile Include="src\MagicEffectExt.cpp">
+      <Filter>src\papyrus</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="exports.def" />
@@ -138,6 +141,9 @@
       <Filter>include\papyrus</Filter>
     </ClInclude>
     <ClInclude Include="include\Papyrus.h">
+      <Filter>include\papyrus</Filter>
+    </ClInclude>
+    <ClInclude Include="include\MagicEffectExt.h">
       <Filter>include\papyrus</Filter>
     </ClInclude>
   </ItemGroup>

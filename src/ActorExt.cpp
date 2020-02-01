@@ -8,47 +8,47 @@
 
 namespace ActorExt
 {
-	float GetAVDamage(RE::StaticFunctionTag*, RE::Actor* a_actor, UInt32 a_actorValue)
+	float GetAVDamage(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, const RE::Actor* a_actor, UInt32 a_actorValue)
 	{
-		using Modifier = RE::Actor::ActorValueModifiers::Modifier;
+		using Modifier = RE::ACTOR_VALUE_MODIFIERS;
 
 		if (!a_actor) {
-			_WARNING("a_actor is a NONE form!");
+			a_vm->TraceStack("a_actor is a NONE form!", a_stackID, Severity::kWarning);
 			return 0.0;
 		} else if (a_actorValue >= to_underlying(RE::ActorValue::kTotal)) {
-			_WARNING("a_actorValue is out of range!");
+			a_vm->TraceStack("a_actorValue is out of range!", a_stackID, Severity::kWarning);
 			return 0.0;
 		}
 
 		auto actorValue = static_cast<RE::ActorValue>(a_actorValue);
 		switch (actorValue) {
 		case RE::ActorValue::kHealth:
-			return a_actor->avHealth.modifiers[Modifier::kDamage];
+			return a_actor->healthModifiers.modifiers[Modifier::kDamage];
 		case RE::ActorValue::kMagicka:
-			return a_actor->avMagicka.modifiers[Modifier::kDamage];
+			return a_actor->magickaModifiers.modifiers[Modifier::kDamage];
 		case RE::ActorValue::kStamina:
-			return a_actor->avStamina.modifiers[Modifier::kDamage];
+			return a_actor->staminaModifiers.modifiers[Modifier::kDamage];
 		case RE::ActorValue::kVoicePoints:
-			return a_actor->avVoicePoints.modifiers[Modifier::kDamage];
+			return a_actor->voicePointsModifiers.modifiers[Modifier::kDamage];
 		default:
 			{
-				auto mod = a_actor->avMap.modifiers[actorValue];
+				auto mod = a_actor->avStorage.modifiers[actorValue];
 				return mod ? mod->modifiers[Modifier::kDamage] : 0.0;
 			}
 		}
 	}
 
 
-	RE::TESRace* GetBaseRace(RE::StaticFunctionTag*, RE::Actor* a_actor)
+	RE::TESRace* GetBaseRace(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, const RE::Actor* a_actor)
 	{
 		if (!a_actor) {
-			_WARNING("a_actor is a NONE form!");
+			a_vm->TraceStack("a_actor is a NONE form!", a_stackID, Severity::kWarning);
 			return 0;
 		}
 
 		if (a_actor->IsPlayerRef()) {
 			auto player = RE::PlayerCharacter::GetSingleton();
-			return player->baseRace;
+			return player->charGenRace;
 		} else {
 			auto npc = a_actor->GetActorBase();
 			return npc ? npc->race : 0;
@@ -56,10 +56,10 @@ namespace ActorExt
 	}
 
 
-	RE::TESAmmo* GetEquippedAmmo(RE::StaticFunctionTag*, RE::Actor* a_actor)
+	RE::TESAmmo* GetEquippedAmmo(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, const RE::Actor* a_actor)
 	{
 		if (!a_actor) {
-			_WARNING("a_actor is a NONE form!");
+			a_vm->TraceStack("a_actor is a NONE form!", a_stackID, Severity::kWarning);
 			return 0;
 		}
 
@@ -70,7 +70,7 @@ namespace ActorExt
 		});
 
 		for (auto& elem : inv) {
-			auto entryData = elem.second.second;
+			auto& entryData = elem.second.second;
 			if (entryData->extraLists) {
 				for (auto& xList : *entryData->extraLists) {
 					if (xList && xList->HasType<RE::ExtraWorn>()) {
@@ -84,15 +84,15 @@ namespace ActorExt
 	}
 
 
-	RE::TESObjectWEAP* GetEquippedWeapon(RE::StaticFunctionTag*, RE::Actor* a_actor, UInt32 a_hand)
+	RE::TESObjectWEAP* GetEquippedWeapon(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, const RE::Actor* a_actor, UInt32 a_hand)
 	{
 		using EquippedHand = RE::AIProcess::Hand;
 
 		if (!a_actor) {
-			_WARNING("a_actor is a NONE form!");
+			a_vm->TraceStack("a_actor is a NONE form!", a_stackID, Severity::kWarning);
 			return 0;
-		} else if (!a_actor->aiProcess) {
-			_WARNING("Actor does not have an AI process!");
+		} else if (!a_actor->currentProcess) {
+			a_vm->TraceStack("Actor does not have an AI process!", a_stackID, Severity::kWarning);
 			return 0;
 		}
 
@@ -109,22 +109,22 @@ namespace ActorExt
 			return 0;
 		}
 
-		auto item = a_actor->aiProcess->equippedObjects[equipHand];
-		return (item && item->IsWeapon()) ? static_cast<RE::TESObjectWEAP*>(item) : 0;
+		auto item = a_actor->currentProcess->equippedObjects[equipHand];
+		return item && item->IsWeapon() ? static_cast<RE::TESObjectWEAP*>(item) : 0;
 	}
 
 
-	float GetMagicEffectMagnitude(RE::StaticFunctionTag*, RE::Actor* a_actor, RE::EffectSetting* a_mgef)
+	float GetMagicEffectMagnitude(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, RE::Actor* a_actor, const RE::EffectSetting* a_mgef)
 	{
 		if (!a_actor) {
-			_WARNING("a_actor is a NONE form!");
+			a_vm->TraceStack("a_actor is a NONE form!", a_stackID, Severity::kWarning);
 			return 0.0;
 		} else if (!a_mgef) {
-			_WARNING("a_mgef is a NONE form!");
+			a_vm->TraceStack("a_mgef is a NONE form!", a_stackID, Severity::kWarning);
 			return 0.0;
 		}
 
-		auto activeEffects = a_actor->GetActiveEffects();
+		auto activeEffects = a_actor->GetActiveEffectList();
 		if (!activeEffects) {
 			return 0.0;
 		}
@@ -138,12 +138,12 @@ namespace ActorExt
 	}
 
 
-	bool RegisterFuncs(RE::BSScript::Internal::VirtualMachine* a_vm)
+	bool RegisterFuncs(VM* a_vm)
 	{
-		a_vm->RegisterFunction("GetAVDamage", "iEquip_ActorExt", GetAVDamage);
-		a_vm->RegisterFunction("GetBaseRace", "iEquip_ActorExt", GetBaseRace);
+		a_vm->RegisterFunction("GetAVDamage", "iEquip_ActorExt", GetAVDamage, true);
+		a_vm->RegisterFunction("GetBaseRace", "iEquip_ActorExt", GetBaseRace, true);
 		a_vm->RegisterFunction("GetEquippedAmmo", "iEquip_ActorExt", GetEquippedAmmo);
-		a_vm->RegisterFunction("GetEquippedWeapon", "iEquip_ActorExt", GetEquippedWeapon);
+		a_vm->RegisterFunction("GetEquippedWeapon", "iEquip_ActorExt", GetEquippedWeapon, true);
 		a_vm->RegisterFunction("GetMagicEffectMagnitude", "iEquip_ActorExt", GetMagicEffectMagnitude);
 
 		return true;

@@ -20,32 +20,50 @@ namespace Hooks
 		class PlayerCharacterEx : public RE::PlayerCharacter
 		{
 		public:
+			static void InstallHooks()
+			{
+				REL::Offset<RemoveItem_t**> removeItem(RE::Offset::PlayerCharacter::Vtbl + (0x8 * 0x56));
+				_RemoveItem = *removeItem;
+				SafeWrite64(removeItem.GetAddress(), unrestricted_cast<std::uintptr_t>(&PlayerCharacterEx::Hook_RemoveItem));
+
+				REL::Offset<AddObjectToContainer_t**> addObjectToContainer(RE::Offset::PlayerCharacter::Vtbl + (0x8 * 0x5A));
+				_AddObjectToContainer = *addObjectToContainer;
+				SafeWrite64(addObjectToContainer.GetAddress(), unrestricted_cast<std::uintptr_t>(&PlayerCharacterEx::Hook_AddObjectToContainer));
+
+				REL::Offset<PickUpObject_t**> pickUpItem(RE::Offset::PlayerCharacter::Vtbl + (0x8 * 0xCC));
+				_PickUpObject = *pickUpItem;
+				SafeWrite64(pickUpItem.GetAddress(), unrestricted_cast<std::uintptr_t>(&PlayerCharacterEx::Hook_PickUpObject));
+
+				_MESSAGE("Installed hooks for (%s)", typeid(PlayerCharacterEx).name());
+			}
+
+		private:
 			using RemoveItem_t = function_type_t<decltype(&RE::PlayerCharacter::RemoveItem)>;	// 56
 			inline static RemoveItem_t* _RemoveItem = 0;
 
-			using AddItem_t = function_type_t<decltype(&RE::PlayerCharacter::AddItem)>;	// 5A
-			inline static AddItem_t* _AddItem = 0;
+			using AddObjectToContainer_t = function_type_t<decltype(&RE::PlayerCharacter::AddObjectToContainer)>;	// 5A
+			inline static AddObjectToContainer_t* _AddObjectToContainer = 0;
 
-			using PickUpItem_t = function_type_t<decltype(&RE::PlayerCharacter::PickUpItem)>;	// CC
-			inline static PickUpItem_t* _PickUpItem = 0;
+			using PickUpObject_t = function_type_t<decltype(&RE::PlayerCharacter::PickUpObject)>;	// CC
+			inline static PickUpObject_t* _PickUpObject = 0;
 
 
-			RE::RefHandle& Hook_RemoveItem(RE::RefHandle& a_dropHandle, RE::TESBoundObject* a_item, SInt32 a_count, RemoveType a_mode, RE::ExtraDataList* a_extraList, RE::TESObjectREFR* a_moveToRef, void* a_arg7, void* a_arg8)
+			RE::ObjectRefHandle Hook_RemoveItem(RE::TESBoundObject* a_object, SInt32 a_count, RE::ITEM_REMOVE_REASON a_reason, RE::ExtraDataList* a_extraList, RE::TESObjectREFR* a_moveToRef, const RE::NiPoint3* a_dropLoc, const RE::NiPoint3* a_rotate)
 			{
 				auto manager = RefHandleManager::GetSingleton();
-				if (a_item && a_extraList && manager->IsInit() && manager->IsTrackedType(a_item)) {
-					manager->TryInvalidateAndDispatch(a_item, a_extraList);
+				if (a_object && a_extraList && manager->IsInit() && manager->IsTrackedType(a_object)) {
+					manager->TryInvalidateAndDispatch(a_object, a_extraList);
 				}
 
-				return _RemoveItem(this, a_dropHandle, a_item, a_count, a_mode, a_extraList, a_moveToRef, a_arg7, a_arg8);
+				return _RemoveItem(this, a_object, a_count, a_reason, a_extraList, a_moveToRef, a_dropLoc, a_rotate);
 			}
 
 
-			void Hook_AddItem(RE::TESBoundObject* a_item, RE::ExtraDataList* a_extraList, SInt32 a_count, RE::TESObjectREFR* a_fromRefr)
+			void Hook_AddObjectToContainer(RE::TESBoundObject* a_object, RE::ExtraDataList* a_extraList, SInt32 a_count, RE::TESObjectREFR* a_fromRefr)
 			{
 				auto manager = RefHandleManager::GetSingleton();
-				if (a_count <= 0 || !a_item || !manager->IsInit() || !manager->IsTrackedType(a_item) || a_item->HasVMAD()) {
-					return _AddItem(this, a_item, a_extraList, a_count, a_fromRefr);
+				if (a_count <= 0 || !a_object || !manager->IsInit() || !manager->IsTrackedType(a_object) || a_object->HasVMAD()) {
+					return _AddObjectToContainer(this, a_object, a_extraList, a_count, a_fromRefr);
 				}
 
 				auto countLeft = a_count;
@@ -53,53 +71,35 @@ namespace Hooks
 				if (a_extraList) {
 					auto count = a_extraList->GetCount();
 					countLeft -= count;
-					manager->ActivateAndDispatch(a_item, a_extraList, count);
-					_AddItem(this, a_item, a_extraList, count, a_fromRefr);
+					manager->ActivateAndDispatch(a_object, a_extraList, count);
+					_AddObjectToContainer(this, a_object, a_extraList, count, a_fromRefr);
 				}
 
 				while (countLeft-- > 0) {
 					a_extraList = 0;
-					manager->ActivateAndDispatch(a_item, a_extraList, 1);
-					_AddItem(this, a_item, a_extraList, 1, a_fromRefr);
+					manager->ActivateAndDispatch(a_object, a_extraList, 1);
+					_AddObjectToContainer(this, a_object, a_extraList, 1, a_fromRefr);
 				}
 			}
 
 
-			void Hook_PickUpItem(RE::TESObjectREFR* a_item, UInt32 a_count, bool a_arg3, bool a_playSound)
+			void Hook_PickUpObject(RE::TESObjectREFR* a_object, UInt32 a_count, bool a_arg3, bool a_playSound)
 			{
 				auto manager = RefHandleManager::GetSingleton();
-				if (a_count <= 0 || !a_item || !a_item->baseForm || !manager->IsInit() || !manager->IsTrackedType(a_item->baseForm) || a_item->HasVMAD()) {
-					return _PickUpItem(this, a_item, a_count, a_arg3, a_playSound);
+				if (a_count <= 0 || !a_object || !a_object->GetBaseObject() || !manager->IsInit() || !manager->IsTrackedType(a_object->GetBaseObject()) || a_object->HasVMAD()) {
+					return _PickUpObject(this, a_object, a_count, a_arg3, a_playSound);
 				}
 
 				auto countLeft = a_count;
 
-				auto count = a_item->extraData.GetCount();
+				auto count = a_object->extraList.GetCount();
 				countLeft -= count;
-				manager->ActivateAndDispatch(a_item->baseForm, a_item->extraData, count);
-				_PickUpItem(this, a_item, count, a_arg3, a_playSound);
+				manager->ActivateAndDispatch(a_object->GetBaseObject(), a_object->extraList, count);
+				_PickUpObject(this, a_object, count, a_arg3, a_playSound);
 
 				while (countLeft-- > 0) {
-					AddItem(a_item->baseForm, 0, 1, 0);
+					_AddObjectToContainer(this, a_object->GetBaseObject(), 0, 1, 0);
 				}
-			}
-
-
-			static void InstallHooks()
-			{
-				REL::Offset<RemoveItem_t**> removeItem(RE::Offset::PlayerCharacter::Vtbl + (0x8 * 0x56));
-				_RemoveItem = *removeItem;
-				SafeWrite64(removeItem.GetAddress(), unrestricted_cast<std::uintptr_t>(&PlayerCharacterEx::Hook_RemoveItem));
-
-				REL::Offset<AddItem_t**> addItem(RE::Offset::PlayerCharacter::Vtbl + (0x8 * 0x5A));
-				_AddItem = *addItem;
-				SafeWrite64(addItem.GetAddress(), unrestricted_cast<std::uintptr_t>(&PlayerCharacterEx::Hook_AddItem));
-
-				REL::Offset<PickUpItem_t**> pickUpItem(RE::Offset::PlayerCharacter::Vtbl + (0x8 * 0xCC));
-				_PickUpItem = *pickUpItem;
-				SafeWrite64(pickUpItem.GetAddress(), unrestricted_cast<std::uintptr_t>(&PlayerCharacterEx::Hook_PickUpItem));
-
-				_MESSAGE("Installed hooks for (%s)", typeid(PlayerCharacterEx).name());
 			}
 		};
 	}

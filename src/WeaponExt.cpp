@@ -3,10 +3,10 @@
 
 namespace WeaponExt
 {
-	bool IsWeaponBound(RE::StaticFunctionTag*, RE::TESObjectWEAP* a_weap)
+	bool IsWeaponBound(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, const RE::TESObjectWEAP* a_weap)
 	{
 		if (!a_weap) {
-			_WARNING("a_weap is a NONE form!");
+			a_vm->TraceStack("a_weap is a NONE form!", a_stackID, Severity::kWarning);
 			return false;
 		}
 
@@ -14,9 +14,9 @@ namespace WeaponExt
 	}
 
 
-	bool RegisterFuncs(RE::BSScript::Internal::VirtualMachine* a_vm)
+	bool RegisterFuncs(VM* a_vm)
 	{
-		a_vm->RegisterFunction("IsWeaponBound", "iEquip_WeaponExt", IsWeaponBound);
+		a_vm->RegisterFunction("IsWeaponBound", "iEquip_WeaponExt", IsWeaponBound, true);
 
 		return true;
 	}

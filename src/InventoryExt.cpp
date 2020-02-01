@@ -37,20 +37,20 @@ namespace InventoryExt
 		};
 
 
-		std::optional<EntryData> LookupEntry(RE::TESForm* a_item, UInt32 a_refHandle)
+		std::optional<EntryData> LookupEntry(VM* a_vm, StackID a_stackID, RE::TESForm* a_item, UInt32 a_refHandle)
 		{
 			auto manager = RefHandleManager::GetSingleton();
 			auto result = manager->LookupEntry(a_item, a_refHandle);
 			if (!result) {
-				_ERROR("[ERROR] Failed to find item!\n");
+				a_vm->TraceStack("Failed to find item!", a_stackID, Severity::kError);
 			}
 			return result;
 		}
 
 
-		std::optional<RE::BGSEquipSlot*> GetSlotByID(EquipSlot a_equipSlot, RE::TESForm* a_item, bool a_worn, bool a_wornLeft)
+		std::optional<RE::BGSEquipSlot*> GetSlotByID(VM* a_vm, StackID a_stackID, EquipSlot a_equipSlot, const RE::TESForm* a_item, bool a_worn, bool a_wornLeft)
 		{
-			using Object = RE::BGSDefaultObjectManager::DefaultObject;
+			using Object = RE::DEFAULT_OBJECT;
 
 			auto dobj = RE::BGSDefaultObjectManager::GetSingleton();
 			RE::BGSEquipSlot* slotOut = 0;
@@ -58,12 +58,12 @@ namespace InventoryExt
 			switch (a_equipSlot) {
 			case EquipSlot::kDefault:
 				if (a_item->IsWeapon()) {
-					_WARNING("a_equipSlot is an invalid slot for a_item!");
+					a_vm->TraceStack("a_equipSlot is an invalid slot for a_item!", a_stackID, Severity::kWarning);
 					return std::nullopt;
 				}
 
 				if (a_worn) {
-					_WARNING("a_item is already worn!");
+					a_vm->TraceStack("a_item is already worn!", a_stackID, Severity::kWarning);
 					return std::nullopt;
 				}
 
@@ -71,32 +71,32 @@ namespace InventoryExt
 				break;
 			case EquipSlot::kRight:
 				if (!a_item->IsWeapon()) {
-					_WARNING("a_equipSlot is an invalid slot for a_item!");
+					a_vm->TraceStack("a_equipSlot is an invalid slot for a_item!", a_stackID, Severity::kWarning);
 					return std::nullopt;
 				}
 
 				if (a_worn) {
-					_WARNING("a_item is already worn!");
+					a_vm->TraceStack("a_item is already worn!", a_stackID, Severity::kWarning);
 					return std::nullopt;
 				}
 
-				slotOut = dobj->GetObject<RE::BGSEquipSlot>(Object::kRightHand);
+				slotOut = dobj->GetObject<RE::BGSEquipSlot>(Object::kRightHandEquip);
 				break;
 			case EquipSlot::kLeft:
 				if (!a_item->IsWeapon()) {
-					_WARNING("a_equipSlot is an invalid slot for a_item!");
+					a_vm->TraceStack("a_equipSlot is an invalid slot for a_item!", a_stackID, Severity::kWarning);
 					return std::nullopt;
 				}
 
 				if (a_wornLeft) {
-					_WARNING("a_item is already worn!");
+					a_vm->TraceStack("a_item is already worn!", a_stackID, Severity::kWarning);
 					return std::nullopt;
 				}
 
-				slotOut = dobj->GetObject<RE::BGSEquipSlot>(Object::kLeftHand);
+				slotOut = dobj->GetObject<RE::BGSEquipSlot>(Object::kLeftHandEquip);
 				break;
 			default:
-				_WARNING("a_equipSlot is not a slot (%i)!", a_equipSlot);
+				a_vm->VTraceStack("a_equipSlot is not a slot (%i)!", a_stackID, Severity::kWarning, a_equipSlot);
 				return std::nullopt;
 			}
 
@@ -104,7 +104,7 @@ namespace InventoryExt
 		}
 
 
-		bool GetWornObjectFilters(XEquipSlot a_equipSlot, RE::ExtraDataType& a_xDataType, RE::FormType& a_formType, RE::BGSBipedObjectForm::FirstPersonFlag& a_firstPersonFlag)
+		bool GetWornObjectFilters(VM* a_vm, StackID a_stackID, XEquipSlot a_equipSlot, RE::ExtraDataType& a_xDataType, RE::FormType& a_formType, RE::BGSBipedObjectForm::FirstPersonFlag& a_firstPersonFlag)
 		{
 			using FPFlag = RE::BGSBipedObjectForm::FirstPersonFlag;
 
@@ -121,7 +121,7 @@ namespace InventoryExt
 				a_xDataType = RE::ExtraDataType::kWornLeft;
 				break;
 			default:
-				_WARNING("a_equipSlot is an invalid slot ID!");
+				a_vm->TraceStack("a_equipSlot is an invalid slot ID!", a_stackID, Severity::kWarning);
 				return false;
 			}
 
@@ -138,7 +138,7 @@ namespace InventoryExt
 				a_formType = RE::FormType::Weapon;
 				break;
 			default:
-				_WARNING("a_equipSlot is an invalid slot ID!");
+				a_vm->TraceStack("a_equipSlot is an invalid slot ID!", a_stackID, Severity::kWarning);
 				return false;
 			}
 
@@ -163,7 +163,7 @@ namespace InventoryExt
 				a_firstPersonFlag = FPFlag::kShield;
 				break;
 			default:
-				_WARNING("a_equipSlot is an invalid slot ID!");
+				a_vm->TraceStack("a_equipSlot is an invalid slot ID!", a_stackID, Severity::kWarning);
 				return false;
 			}
 
@@ -172,10 +172,10 @@ namespace InventoryExt
 	}
 
 
-	void RegisterForOnRefHandleActiveEvent(RE::StaticFunctionTag*, RE::TESForm* a_thisForm)
+	void RegisterForOnRefHandleActiveEvent(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, const RE::TESForm* a_thisForm)
 	{
 		if (!a_thisForm) {
-			_WARNING("a_thisForm is a NONE form!");
+			a_vm->TraceStack("a_thisForm is a NONE form!", a_stackID, Severity::kWarning);
 			return;
 		}
 
@@ -184,10 +184,10 @@ namespace InventoryExt
 	}
 
 
-	void UnregisterForOnRefHandleActiveEvent(RE::StaticFunctionTag*, RE::TESForm* a_thisForm)
+	void UnregisterForOnRefHandleActiveEvent(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, const RE::TESForm* a_thisForm)
 	{
 		if (!a_thisForm) {
-			_WARNING("a_thisForm is a NONE form!");
+			a_vm->TraceStack("a_thisForm is a NONE form!", a_stackID, Severity::kWarning);
 			return;
 		}
 
@@ -196,10 +196,10 @@ namespace InventoryExt
 	}
 
 
-	void RegisterForOnRefHandleInvalidatedEvent(RE::StaticFunctionTag*, RE::TESForm* a_thisForm)
+	void RegisterForOnRefHandleInvalidatedEvent(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, const RE::TESForm* a_thisForm)
 	{
 		if (!a_thisForm) {
-			_WARNING("a_thisForm is a NONE form!");
+			a_vm->TraceStack("a_thisForm is a NONE form!", a_stackID, Severity::kWarning);
 			return;
 		}
 
@@ -208,10 +208,10 @@ namespace InventoryExt
 	}
 
 
-	void UnregisterForOnRefHandleInvalidatedEvent(RE::StaticFunctionTag*, RE::TESForm* a_thisForm)
+	void UnregisterForOnRefHandleInvalidatedEvent(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, const RE::TESForm* a_thisForm)
 	{
 		if (!a_thisForm) {
-			_WARNING("a_thisForm is a NONE form!");
+			a_vm->TraceStack("a_thisForm is a NONE form!", a_stackID, Severity::kWarning);
 			return;
 		}
 
@@ -220,17 +220,17 @@ namespace InventoryExt
 	}
 
 
-	void EquipItem(RE::StaticFunctionTag*, RE::TESForm* a_item, UInt32 a_refHandle, RE::Actor* a_actor, UInt32 a_equipSlot, bool a_preventUnequip, bool a_equipSound)
+	void EquipItem(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, RE::TESForm* a_item, UInt32 a_refHandle, RE::Actor* a_actor, UInt32 a_equipSlot, bool a_preventUnequip, bool a_equipSound)
 	{
 		if (!a_item) {
-			_WARNING("a_item is a NONE form!");
+			a_vm->TraceStack("a_item is a NONE form!", a_stackID, Severity::kWarning);
 			return;
 		} else if (!a_actor) {
-			_WARNING("a_actor is a NONE form!");
+			a_vm->TraceStack("a_actor is a NONE form!", a_stackID, Severity::kWarning);
 			return;
 		}
 
-		auto entryData = LookupEntry(a_item, a_refHandle);
+		auto entryData = LookupEntry(a_vm, a_stackID, a_item, a_refHandle);
 		if (!entryData) {
 			return;
 		}
@@ -249,14 +249,14 @@ namespace InventoryExt
 		}
 
 		auto equipSlot = static_cast<EquipSlot>(a_equipSlot);
-		auto slot = GetSlotByID(equipSlot, a_item, worn, wornLeft);
+		auto slot = GetSlotByID(a_vm, a_stackID, equipSlot, a_item, worn, wornLeft);
 		if (!slot) {
 			return;
 		}
 
 		SInt32 countReq = (worn || wornLeft) ? 2 : 1;
 		if (count < countReq) {
-			_ERROR("Item count is too small to equip!\n");
+			a_vm->TraceStack("Item count is too small to equip!", a_stackID, Severity::kError);
 			return;
 		}
 
@@ -275,36 +275,36 @@ namespace InventoryExt
 	}
 
 
-	RE::EnchantmentItem* GetEnchantment(RE::StaticFunctionTag*, RE::TESForm* a_item, UInt32 a_refHandle)
+	RE::EnchantmentItem* GetEnchantment(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, RE::TESForm* a_item, UInt32 a_refHandle)
 	{
 		if (!a_item) {
-			_WARNING("a_item is a NONE form!");
+			a_vm->TraceStack("a_item is a NONE form!", a_stackID, Severity::kWarning);
 			return false;
 		}
 
-		auto entryData = LookupEntry(a_item, a_refHandle);
+		auto entryData = LookupEntry(a_vm, a_stackID, a_item, a_refHandle);
 		if (!entryData) {
 			return 0;
 		}
 
 		auto xEnch = entryData->extraList->GetByType<RE::ExtraEnchantment>();
 		if (xEnch) {
-			return xEnch->objectEffect;
+			return xEnch->enchantment;
 		}
 
-		auto enchForm = a_item->As<RE::TESEnchantableForm*>();
-		return enchForm ? enchForm->objectEffect : 0;
+		auto enchForm = a_item->As<RE::TESEnchantableForm>();
+		return enchForm ? enchForm->formEnchanting : 0;
 	}
 
 
-	RE::BSFixedString GetLongName(RE::StaticFunctionTag*, RE::TESForm* a_item, UInt32 a_refHandle)
+	RE::BSFixedString GetLongName(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, RE::TESForm* a_item, UInt32 a_refHandle)
 	{
 		if (!a_item) {
-			_WARNING("a_item is a NONE form!");
+			a_vm->TraceStack("a_item is a NONE form!", a_stackID, Severity::kWarning);
 			return "";
 		}
 
-		auto entryData = LookupEntry(a_item, a_refHandle);
+		auto entryData = LookupEntry(a_vm, a_stackID, a_item, a_refHandle);
 		if (!entryData) {
 			return "";
 		}
@@ -312,25 +312,25 @@ namespace InventoryExt
 		entryData->invEntryData->GenerateName();
 		auto xText = entryData->extraList->GetByType<RE::ExtraTextDisplayData>();
 		if (xText) {
-			return xText->name;
+			return xText->displayName;
 		} else {
-			auto fullName = a_item->As<RE::TESFullName*>();
+			auto fullName = a_item->As<RE::TESFullName>();
 			return fullName ? fullName->fullName : "";
 		}
 	}
 
 
-	RE::AlchemyItem* GetPoison(RE::StaticFunctionTag*, RE::TESForm* a_item, UInt32 a_refHandle)
+	RE::AlchemyItem* GetPoison(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, RE::TESForm* a_item, UInt32 a_refHandle)
 	{
 		if (!a_item) {
-			_WARNING("a_item is a NONE form!");
+			a_vm->TraceStack("a_item is a NONE form!", a_stackID, Severity::kWarning);
 			return 0;
 		} else if (!a_item->IsWeapon()) {
-			_WARNING("a_item is not a weapon!");
+			a_vm->TraceStack("a_item is not a weapon!", a_stackID, Severity::kWarning);
 			return 0;
 		}
 
-		auto entryData = LookupEntry(a_item, a_refHandle);
+		auto entryData = LookupEntry(a_vm, a_stackID, a_item, a_refHandle);
 		if (!entryData) {
 			return 0;
 		}
@@ -340,17 +340,17 @@ namespace InventoryExt
 	}
 
 
-	SInt32 GetPoisonCount(RE::StaticFunctionTag*, RE::TESForm* a_item, UInt32 a_refHandle)
+	SInt32 GetPoisonCount(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, RE::TESForm* a_item, UInt32 a_refHandle)
 	{
 		if (!a_item) {
-			_WARNING("a_item is a NONE form!");
+			a_vm->TraceStack("a_item is a NONE form!", a_stackID, Severity::kWarning);
 			return 0;
 		} else if (!a_item->IsWeapon()) {
-			_WARNING("a_item is not a weapon!");
+			a_vm->TraceStack("a_item is not a weapon!", a_stackID, Severity::kWarning);
 			return 0;
 		}
 
-		auto entryData = LookupEntry(a_item, a_refHandle);
+		auto entryData = LookupEntry(a_vm, a_stackID, a_item, a_refHandle);
 		if (!entryData) {
 			return 0;
 		}
@@ -360,34 +360,33 @@ namespace InventoryExt
 	}
 
 
-	UInt32 GetRefHandleAtInvIndex(RE::StaticFunctionTag*, UInt32 a_index)
+	UInt32 GetRefHandleAtInvIndex(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, UInt32 a_index)
 	{
-		auto mm = RE::MenuManager::GetSingleton();
-		auto uiStr = RE::InterfaceStrings::GetSingleton();
-		auto invMenu = mm->GetMenu<RE::InventoryMenu>(uiStr->inventoryMenu);
+		auto ui = RE::UI::GetSingleton();
+		auto invMenu = ui->GetMenu<RE::InventoryMenu>();
 		if (!invMenu) {
-			_WARNING("Inventory menu is not open!");
+			a_vm->TraceStack("Inventory menu is not open!", a_stackID, Severity::kWarning);
 			return RefHandleManager::kInvalidRefHandle;
 		} else if (!invMenu->itemList) {
-			_WARNING("Inventory menu is has no item list!");
+			a_vm->TraceStack("Inventory menu is has no item list!", a_stackID, Severity::kWarning);
 			return RefHandleManager::kInvalidRefHandle;
 		}
 
 		auto& items = invMenu->itemList->items;
 		if (a_index >= items.size()) {
-			_WARNING("Index is out of range!");
+			a_vm->TraceStack("Index is out of range!", a_stackID, Severity::kWarning);
 			return RefHandleManager::kInvalidRefHandle;
 		}
 
 		auto item = items[a_index];
 		if (!item) {
-			_ERROR("Failed to find item at index!\n");
+			a_vm->TraceStack("Failed to find item at index!", a_stackID, Severity::kError);
 			return RefHandleManager::kInvalidRefHandle;
 		} else if (!item->data.objDesc) {
-			_ERROR("Item did not have a entry data!\n");
+			a_vm->TraceStack("Item did not have a entry data!", a_stackID, Severity::kError);
 			return RefHandleManager::kInvalidRefHandle;
 		} else if (!item->data.objDesc->extraLists) {
-			_ERROR("Item did not have extra data!\n");
+			a_vm->TraceStack("Item did not have extra data!", a_stackID, Severity::kError);
 			return RefHandleManager::kInvalidRefHandle;
 		}
 
@@ -398,18 +397,18 @@ namespace InventoryExt
 				auto manager = RefHandleManager::GetSingleton();
 				auto handle = manager->LookupHandle(xID->uniqueID);
 				if (handle == RefHandleManager::kInvalidRefHandle) {
-					_ERROR("Could not find handle for unique ID!\n");
+					a_vm->TraceStack("Could not find handle for unique ID!", a_stackID, Severity::kError);
 				}
 				return handle;
 			}
 		}
 
-		_ERROR("Could not find unique ID for item!\n");
+		a_vm->TraceStack("Could not find unique ID for item!", a_stackID, Severity::kError);
 		return RefHandleManager::kInvalidRefHandle;
 	}
 
 
-	UInt32 GetRefHandleFromWornObject(RE::StaticFunctionTag*, UInt32 a_equipSlot)
+	UInt32 GetRefHandleFromWornObject(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, UInt32 a_equipSlot)
 	{
 		using FPFlag = RE::BGSBipedObjectForm::FirstPersonFlag;
 
@@ -418,7 +417,7 @@ namespace InventoryExt
 		RE::FormType formType;
 		FPFlag fpFlag;
 		auto xEquipSlot = static_cast<XEquipSlot>(a_equipSlot);
-		if (!GetWornObjectFilters(xEquipSlot, xDataType, formType, fpFlag)) {
+		if (!GetWornObjectFilters(a_vm, a_stackID, xEquipSlot, xDataType, formType, fpFlag)) {
 			return handle;
 		}
 
@@ -445,7 +444,7 @@ namespace InventoryExt
 		});
 
 		for (auto& item : inv) {
-			auto entryData = item.second.second;
+			auto& entryData = item.second.second;
 			if (entryData->extraLists) {
 				for (auto& xList : *entryData->extraLists) {
 					if (xList->HasType(xDataType)) {
@@ -459,19 +458,19 @@ namespace InventoryExt
 			}
 		}
 
-		_ERROR("Failed to find ref handle!\n");
+		a_vm->TraceStack("Failed to find ref handle!", a_stackID, Severity::kError);
 		return RefHandleManager::kInvalidRefHandle;
 	}
 
 
-	RE::BSFixedString GetShortName(RE::StaticFunctionTag*, RE::TESForm* a_item, UInt32 a_refHandle)
+	RE::BSFixedString GetShortName(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, RE::TESForm* a_item, UInt32 a_refHandle)
 	{
 		if (!a_item) {
-			_WARNING("a_item is a NONE form!");
+			a_vm->TraceStack("a_item is a NONE form!", a_stackID, Severity::kWarning);
 			return "";
 		}
 
-		auto entryData = LookupEntry(a_item, a_refHandle);
+		auto entryData = LookupEntry(a_vm, a_stackID, a_item, a_refHandle);
 		if (!entryData) {
 			return "";
 		}
@@ -479,16 +478,16 @@ namespace InventoryExt
 		entryData->invEntryData->GenerateName();
 		auto xText = entryData->extraList->GetByType<RE::ExtraTextDisplayData>();
 		if (xText && xText->IsPlayerSet()) {
-			std::string name(xText->name.c_str(), xText->rawNameLen);
+			std::string name(xText->displayName.c_str(), xText->customNameLength);
 			return name.c_str();
 		} else {
-			auto fullName = a_item->As<RE::TESFullName*>();
+			auto fullName = a_item->As<RE::TESFullName>();
 			return fullName ? fullName->fullName : "";
 		}
 	}
 
 
-	void ParseInventory(RE::StaticFunctionTag*)
+	void ParseInventory(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*)
 	{
 		auto task = SKSE::GetTaskInterface();
 		task->AddTask([]() -> void
@@ -503,7 +502,7 @@ namespace InventoryExt
 			for (auto& elem : inv) {
 				auto item = elem.first;
 				auto rawCount = elem.second.first;
-				auto entryData = elem.second.second;
+				auto& entryData = elem.second.second;
 
 				if (entryData->extraLists) {
 					for (auto& xList : *entryData->extraLists) {
@@ -528,17 +527,17 @@ namespace InventoryExt
 	}
 
 
-	void RemovePoison(RE::StaticFunctionTag*, RE::TESForm* a_item, UInt32 a_refHandle)
+	void RemovePoison(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, RE::TESForm* a_item, UInt32 a_refHandle)
 	{
 		if (!a_item) {
-			_WARNING("a_item is a NONE form!");
+			a_vm->TraceStack("a_item is a NONE form!", a_stackID, Severity::kWarning);
 			return;
 		} else if (!a_item->IsWeapon()) {
-			_WARNING("a_item is not a weapon!");
+			a_vm->TraceStack("a_item is not a weapon!", a_stackID, Severity::kWarning);
 			return;
 		}
 
-		auto entryData = LookupEntry(a_item, a_refHandle);
+		auto entryData = LookupEntry(a_vm, a_stackID, a_item, a_refHandle);
 		if (!entryData) {
 			return;
 		}
@@ -551,23 +550,23 @@ namespace InventoryExt
 	}
 
 
-	void SetPoison(RE::StaticFunctionTag*, RE::TESForm* a_item, UInt32 a_refHandle, RE::AlchemyItem* a_newPoison, UInt32 a_newCount)
+	void SetPoison(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, RE::TESForm* a_item, UInt32 a_refHandle, RE::AlchemyItem* a_newPoison, UInt32 a_newCount)
 	{
 		if (!a_item) {
-			_WARNING("a_item is a NONE form!");
+			a_vm->TraceStack("a_item is a NONE form!", a_stackID, Severity::kWarning);
 			return;
 		} else if (!a_item->IsWeapon()) {
-			_WARNING("a_item is not a weapon!");
+			a_vm->TraceStack("a_item is not a weapon!", a_stackID, Severity::kWarning);
 			return;
 		} else if (!a_newPoison) {
-			_WARNING("a_newPoison is a NONE form!");
+			a_vm->TraceStack("a_newPoison is a NONE form!", a_stackID, Severity::kWarning);
 			return;
 		} else if (!a_newPoison->IsPoison()) {
-			_WARNING("a_newPoison is not a poison!");
+			a_vm->TraceStack("a_newPoison is not a poison!", a_stackID, Severity::kWarning);
 			return;
 		}
 
-		auto entryData = LookupEntry(a_item, a_refHandle);
+		auto entryData = LookupEntry(a_vm, a_stackID, a_item, a_refHandle);
 		if (!entryData) {
 			return;
 		}
@@ -582,17 +581,17 @@ namespace InventoryExt
 	}
 
 
-	void SetPoisonCount(RE::StaticFunctionTag*, RE::TESForm* a_item, UInt32 a_refHandle, UInt32 a_newCount)
+	void SetPoisonCount(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, RE::TESForm* a_item, UInt32 a_refHandle, UInt32 a_newCount)
 	{
 		if (!a_item) {
-			_WARNING("a_item is a NONE form!");
+			a_vm->TraceStack("a_item is a NONE form!", a_stackID, Severity::kWarning);
 			return;
 		} else if (!a_item->IsWeapon()) {
-			_WARNING("a_item is not a weapon!");
+			a_vm->TraceStack("a_item is not a weapon!", a_stackID, Severity::kWarning);
 			return;
 		}
 
-		auto entryData = LookupEntry(a_item, a_refHandle);
+		auto entryData = LookupEntry(a_vm, a_stackID, a_item, a_refHandle);
 		if (!entryData) {
 			return;
 		}
@@ -604,12 +603,12 @@ namespace InventoryExt
 	}
 
 
-	bool RegisterFuncs(RE::BSScript::Internal::VirtualMachine* a_vm)
+	bool RegisterFuncs(VM* a_vm)
 	{
-		a_vm->RegisterFunction("RegisterForOnRefHandleActiveEvent", "iEquip_InventoryExt", RegisterForOnRefHandleActiveEvent);
-		a_vm->RegisterFunction("UnregisterForOnRefHandleActiveEvent", "iEquip_InventoryExt", UnregisterForOnRefHandleActiveEvent);
-		a_vm->RegisterFunction("RegisterForOnRefHandleInvalidatedEvent", "iEquip_InventoryExt", RegisterForOnRefHandleInvalidatedEvent);
-		a_vm->RegisterFunction("UnregisterForOnRefHandleInvalidatedEvent", "iEquip_InventoryExt", UnregisterForOnRefHandleInvalidatedEvent);
+		a_vm->RegisterFunction("RegisterForOnRefHandleActiveEvent", "iEquip_InventoryExt", RegisterForOnRefHandleActiveEvent, true);
+		a_vm->RegisterFunction("UnregisterForOnRefHandleActiveEvent", "iEquip_InventoryExt", UnregisterForOnRefHandleActiveEvent, true);
+		a_vm->RegisterFunction("RegisterForOnRefHandleInvalidatedEvent", "iEquip_InventoryExt", RegisterForOnRefHandleInvalidatedEvent, true);
+		a_vm->RegisterFunction("UnregisterForOnRefHandleInvalidatedEvent", "iEquip_InventoryExt", UnregisterForOnRefHandleInvalidatedEvent, true);
 		a_vm->RegisterFunction("EquipItem", "iEquip_InventoryExt", EquipItem);
 		a_vm->RegisterFunction("GetEnchantment", "iEquip_InventoryExt", GetEnchantment);
 		a_vm->RegisterFunction("GetLongName", "iEquip_InventoryExt", GetLongName);

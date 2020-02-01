@@ -43,10 +43,10 @@ public:
 	bool	Save(SKSE::SerializationInterface* a_intfc, UInt32 a_type, UInt32 a_version);
 	bool	Load(SKSE::SerializationInterface* a_intfc, UInt32 a_version);
 
-	HandleResult	ActivateAndDispatch(RE::TESForm* a_item, RE::ExtraDataList*& a_extraList, SInt32 a_count);
-	HandleResult	ActivateAndDispatch(RE::TESForm* a_item, RE::ExtraDataList& a_extraList, SInt32 a_count);
-	bool			InvalidateAndDispatch(RE::TESForm* a_item, UniqueID a_uniqueID);
-	bool			TryInvalidateAndDispatch(RE::TESForm* a_item, RE::ExtraDataList* a_extraList);
+	HandleResult	ActivateAndDispatch(const RE::TESForm* a_item, RE::ExtraDataList*& a_extraList, SInt32 a_count);
+	HandleResult	ActivateAndDispatch(const RE::TESForm* a_item, RE::ExtraDataList& a_extraList, SInt32 a_count);
+	bool			InvalidateAndDispatch(const RE::TESForm* a_item, UniqueID a_uniqueID);
+	bool			TryInvalidateAndDispatch(const RE::TESForm* a_item, RE::ExtraDataList* a_extraList);
 
 	std::optional<EntryData>	LookupEntry(RE::TESForm* a_item, RefHandle a_handle);
 	RefHandle					LookupHandle(UniqueID a_uniqueID);
@@ -56,7 +56,7 @@ public:
 	void	SetInit();
 
 private:
-	using EventResult = RE::EventResult;
+	using EventResult = RE::BSEventNotifyControl;
 	using Lock = std::recursive_mutex;
 	using Locker = std::lock_guard<Lock>;
 
@@ -83,10 +83,9 @@ private:
 	RefHandleManager& operator=(const RefHandleManager&) = delete;
 	RefHandleManager& operator=(RefHandleManager&&) = delete;
 
-	// needs to handle items getting unique id that we haven't tracked before
-	virtual	EventResult ReceiveEvent(RE::TESUniqueIDChangeEvent* a_event, RE::BSTEventSource<RE::TESUniqueIDChangeEvent>* a_dispatcher) override;
+	virtual	EventResult ProcessEvent(const RE::TESUniqueIDChangeEvent* a_event, RE::BSTEventSource<RE::TESUniqueIDChangeEvent>* a_dispatcher) override;
 
-	HandleResult ActivateAndDispatch(RE::TESForm* a_item, RE::ExtraDataList& a_extraList, SInt32 a_count, RefHandle a_handle);
+	HandleResult ActivateAndDispatch(const RE::TESForm* a_item, RE::ExtraDataList& a_extraList, SInt32 a_count, RefHandle a_handle);
 
 	RefHandle	GetFreeHandle();
 	void		MarkHandle(RefHandle a_handle);

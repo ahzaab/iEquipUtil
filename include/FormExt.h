@@ -5,28 +5,33 @@
 
 namespace FormExt
 {
-	void	RegisterForBoundWeaponEquippedEvent(RE::StaticFunctionTag*, RE::TESForm* a_thisForm);
-	void	UnregisterForBoundWeaponEquippedEvent(RE::StaticFunctionTag*, RE::TESForm* a_thisForm);
+	using VM = RE::BSScript::IVirtualMachine;
+	using StackID = RE::VMStackID;
+	using Severity = RE::BSScript::ErrorLogger::Severity;
 
-	void	RegisterForBoundWeaponUnequippedEvent(RE::StaticFunctionTag*, RE::TESForm* a_thisForm);
-	void	UnregisterForBoundWeaponUnequippedEvent(RE::StaticFunctionTag*, RE::TESForm* a_thisForm);
 
-	bool	HasFire(RE::StaticFunctionTag*, RE::TESForm* a_form);
-	bool	HasIce(RE::StaticFunctionTag*, RE::TESForm* a_form);
-	bool	HasPoison(RE::StaticFunctionTag*, RE::TESForm* a_form);
-	bool	HasShock(RE::StaticFunctionTag*, RE::TESForm* a_form);
-	bool	IsBandage(RE::StaticFunctionTag*, RE::TESForm* a_form);
-	bool	IsGrenade(RE::StaticFunctionTag*, RE::TESForm* a_form);
-	bool	IsJavelin(RE::StaticFunctionTag*, RE::TESForm* a_form);
-	bool	IsOil(RE::StaticFunctionTag*, RE::TESForm* a_form);
-	bool	IsSalve(RE::StaticFunctionTag*, RE::TESForm* a_form);
-	bool	IsSpear(RE::StaticFunctionTag*, RE::TESForm* a_form);
-	bool	IsSpellRanged(RE::StaticFunctionTag*, RE::TESForm* a_form);
-	bool	IsSpellWard(RE::StaticFunctionTag*, RE::TESForm* a_form);
-	bool	IsStaffRanged(RE::StaticFunctionTag*, RE::TESForm* a_form);
-	bool	IsThrowingAxe(RE::StaticFunctionTag*, RE::TESForm* a_form);
-	bool	IsThrowingKnife(RE::StaticFunctionTag*, RE::TESForm* a_form);
-	bool	IsWax(RE::StaticFunctionTag*, RE::TESForm* a_form);
+	void	RegisterForBoundWeaponEquippedEvent(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, const RE::TESForm* a_thisForm);
+	void	UnregisterForBoundWeaponEquippedEvent(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, const RE::TESForm* a_thisForm);
 
-	bool RegisterFuncs(RE::BSScript::Internal::VirtualMachine* a_vm);
+	void	RegisterForBoundWeaponUnequippedEvent(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, const RE::TESForm* a_thisForm);
+	void	UnregisterForBoundWeaponUnequippedEvent(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, const RE::TESForm* a_thisForm);
+
+	bool	HasFire(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, const RE::TESForm* a_form);
+	bool	HasIce(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, const RE::TESForm* a_form);
+	bool	HasPoison(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, const RE::TESForm* a_form);
+	bool	HasShock(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, const RE::TESForm* a_form);
+	bool	IsBandage(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, const RE::TESForm* a_form);
+	bool	IsGrenade(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, const RE::TESForm* a_form);
+	bool	IsJavelin(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, const RE::TESForm* a_form);
+	bool	IsOil(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, const RE::TESForm* a_form);
+	bool	IsSalve(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, const RE::TESForm* a_form);
+	bool	IsSpear(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, const RE::TESForm* a_form);
+	bool	IsSpellRanged(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, const RE::TESForm* a_form);
+	bool	IsSpellWard(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, const RE::TESForm* a_form);
+	bool	IsStaffRanged(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, const RE::TESForm* a_form);
+	bool	IsThrowingAxe(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, const RE::TESForm* a_form);
+	bool	IsThrowingKnife(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, const RE::TESForm* a_form);
+	bool	IsWax(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, const RE::TESForm* a_form);
+
+	bool RegisterFuncs(VM* a_vm);
 }

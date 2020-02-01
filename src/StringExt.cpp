@@ -24,10 +24,10 @@ namespace StringExt
 	}
 
 
-	RE::BSFixedString LocalizeString(RE::StaticFunctionTag*, RE::BSFixedString a_str)
+	RE::BSFixedString LocalizeString(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, RE::BSFixedString a_str)
 	{
 		if (a_str.empty()) {
-			_ERROR("String was empty!\n");
+			a_vm->TraceStack("String was empty!", a_stackID, Severity::kError);
 		}
 
 		auto loc = LocaleManager::GetSingleton();
@@ -35,11 +35,11 @@ namespace StringExt
 	}
 
 
-	bool RegisterFuncs(RE::BSScript::Internal::VirtualMachine* a_vm)
+	bool RegisterFuncs(VM* a_vm)
 	{
-		a_vm->RegisterFunction("CalcCRC32Hash", "iEquip_StringExt", CalcCRC32Hash);
-		a_vm->RegisterFunction("IntToHexString", "iEquip_StringExt", IntToHexString);
-		a_vm->RegisterFunction("LocalizeString", "iEquip_StringExt", LocalizeString);
+		a_vm->RegisterFunction("CalcCRC32Hash", "iEquip_StringExt", CalcCRC32Hash, true);
+		a_vm->RegisterFunction("IntToHexString", "iEquip_StringExt", IntToHexString, true);
+		a_vm->RegisterFunction("LocalizeString", "iEquip_StringExt", LocalizeString, true);
 
 		return true;
 	}

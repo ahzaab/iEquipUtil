@@ -21,8 +21,8 @@ namespace Events
 		{
 			auto player = RE::PlayerCharacter::GetSingleton();
 
-			auto rightHand = player->aiProcess->GetEquippedRightHand();
-			auto leftHand = player->aiProcess->GetEquippedLeftHand();
+			auto rightHand = player->currentProcess->GetEquippedRightHand();
+			auto leftHand = player->currentProcess->GetEquippedLeftHand();
 
 			UInt32 slotID = 0;
 			if (rightHand && rightHand->formID == a_weap->formID) {
@@ -39,8 +39,8 @@ namespace Events
 		{
 			auto player = RE::PlayerCharacter::GetSingleton();
 
-			UInt32 slotID = !player->aiProcess->GetEquippedRightHand() ? kSlotID_Right : kSlotID_Default;
-			slotID += !player->aiProcess->GetEquippedRightHand() ? kSlotID_Left : kSlotID_Default;
+			UInt32 slotID = !player->currentProcess->GetEquippedRightHand() ? kSlotID_Right : kSlotID_Default;
+			slotID += !player->currentProcess->GetEquippedRightHand() ? kSlotID_Left : kSlotID_Default;
 			return slotID;
 		}
 	}
@@ -53,21 +53,21 @@ namespace Events
 	}
 
 
-	auto EquipEventHandler::ReceiveEvent(RE::TESEquipEvent* a_event, RE::BSTEventSource<RE::TESEquipEvent>* a_dispatcher)
+	auto EquipEventHandler::ProcessEvent(const RE::TESEquipEvent* a_event, RE::BSTEventSource<RE::TESEquipEvent>* a_dispatcher)
 		-> EventResult
 	{
-		if (!a_event || !a_event->source || !a_event->source->IsPlayerRef()) {
+		if (!a_event || !a_event->actor || !a_event->actor->IsPlayerRef()) {
 			return EventResult::kContinue;
 		}
 
-		auto weap = RE::TESForm::LookupByID<RE::TESObjectWEAP>(a_event->itemID);
+		auto weap = RE::TESForm::LookupByID<RE::TESObjectWEAP>(a_event->baseObject);
 		if (!weap || !weap->IsBound()) {
 			return EventResult::kContinue;
 		}
 
-		if (a_event->isEquipping) {
+		if (a_event->equipped) {
 			auto equipSlots = GetEquippedSlots(weap);
-			OnBoundWeaponEquippedRegSet::GetSingleton()->QueueEvent(to_underlying(weap->data.animationType), equipSlots);
+			OnBoundWeaponEquippedRegSet::GetSingleton()->QueueEvent(to_underlying(weap->weaponData.animationType), equipSlots);
 		} else {
 			auto unequipSlots = GetUnequippedSlots();
 			OnBoundWeaponUnequippedRegSet::GetSingleton()->QueueEvent(weap, unequipSlots);

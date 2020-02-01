@@ -1,6 +1,8 @@
 #pragma once
 
-#include <map>
+#include <exception>
+#include <unordered_map>
+#include <regex>
 #include <string>
 
 #include "RE/Skyrim.h"
@@ -8,63 +10,96 @@
 #include "Json2Settings.h"
 
 
-template<>
-class aSetting<RE::TESForm*> :
-	public ISetting,
-	public std::map<UInt32, RE::TESForm*>
+template <class T> using aSetting = Json2Settings::aSetting<T>;
+
+
+namespace Json2Settings
 {
-private:
-	using Container = std::map<UInt32, RE::TESForm*>;
-
-public:
-	aSetting() = delete;
-
-	aSetting(std::string a_key, std::initializer_list<Container::value_type> a_list = {}, bool a_consoleOK = false) :
-		ISetting(a_key, a_consoleOK),
-		Container(a_list)
-	{}
-
-	virtual ~aSetting() = default;
-
-	virtual void assign(json& a_val) override
+	template<>
+	class aSetting<RE::TESForm*> : public ISetting
 	{
-		clear();
-		auto dataHandler = RE::TESDataHandler::GetSingleton();
-		std::string pluginName;
-		std::string formIDStr;
-		UInt32 formIDNum;
-		RE::TESForm* form = 0;
-		for (auto& val : a_val) {
-			val.at("pluginName").get_to(pluginName);
-			val.at("formID").get_to(formIDStr);
-			formIDNum = std::stoi(formIDStr, 0, 16);
-			form = dataHandler->LookupForm(formIDNum, pluginName);
-			if (form) {
-				Container::insert({ form->formID, form });
+	public:
+		using key_type = RE::FormID;
+		using mapped_type = RE::TESForm*;
+		using container_type = std::unordered_map<key_type, mapped_type>;
+		using value_type = container_type::value_type;
+
+		aSetting() = delete;
+
+		aSetting(std::string a_key, std::initializer_list<value_type> a_init = {}) :
+			ISetting(std::move(a_key)),
+			_container(std::move(a_init))
+		{}
+
+		virtual ~aSetting() = default;
+
+		[[nodiscard]] container_type& operator*()
+		{
+			return _container;
+		}
+
+		[[nodiscard]] const container_type& operator*() const
+		{
+			return _container;
+		}
+
+		[[nodiscard]] container_type* operator->()
+		{
+			return std::addressof(_container);
+		}
+
+		[[nodiscard]] const container_type* operator->() const
+		{
+			return std::addressof(_container);
+		}
+
+	protected:
+		// ignore exceptions, let the loader catch them so we can get the guilty file name
+		virtual void assign_impl(const json& a_val) override
+		{
+			auto dataHandler = RE::TESDataHandler::GetSingleton();
+			std::string pluginName;
+			std::string formIDStr;
+			RE::FormID formIDNum;
+			RE::TESForm* form = 0;
+			for (auto& val : a_val) {
+				pluginName = val.at("pluginName").get<std::string>();
+				formIDStr = val.at("formID").get<std::string>();
+				formIDNum = std::stoi(formIDStr, 0, 16);
+				form = dataHandler->LookupForm(formIDNum, pluginName);
+				if (form) {
+					_container.insert(std::make_pair(form->formID, form));
+				}
 			}
 		}
-	}
 
-	virtual void dump() override
-	{
-		_DMESSAGE("== %s ==", _key.c_str());
-		for (auto& elem : *this) {
-			_DMESSAGE("[0x%08X]", elem.first);
+		[[nodiscard]] virtual string_t dump_impl() const override
+		{
+			auto dmp = key();
+			dmp += ":";
+			for (auto& elem : _container) {
+				dmp += Impl::format("\n\t[0x%08X]", elem.first);
+			}
+			return dmp;
 		}
-	}
 
-	virtual std::string	getValueAsString() const override
-	{
-		return "";
-	}
-};
+		[[nodiscard]] virtual string_t to_string_impl() const override
+		{
+			return "<INVALID>";
+		}
+
+	private:
+		container_type _container;
+	};
+}
 
 
-class Settings : public Json2Settings::Settings
+class Settings
 {
 public:
 	Settings() = delete;
-	static bool loadSettings(bool a_dumpParse = false);
+
+	static bool LoadSettings(bool a_dumpParse = false);
 
 
 	static aSetting<RE::TESForm*> bandages;
@@ -85,6 +120,7 @@ public:
 	static aSetting<RE::TESForm*> waxes;
 
 private:
-	static constexpr char FILE_PREFIX[] = "Data\\SKSE\\Plugins\\";
-	static constexpr char FILE_PATTERN[] = "iEquip_*.json";
+	static constexpr char FILE_PATH[] = "Data\\SKSE\\Plugins\\";
+	static constexpr wchar_t REGEX_PATTERN[] = L"iEquip_.*\\.json";
+	static constexpr auto REGEX_FLAGS = std::regex_constants::grep | std::regex_constants::icase;
 };

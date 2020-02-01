@@ -13,7 +13,7 @@ class LocaleManager
 {
 public:
 	static LocaleManager*	GetSingleton();
-	static std::wstring		ConvertStringToWstring(const std::string& a_str);
+	static std::wstring		ConvertStringToWString(const std::string& a_str);
 	static std::string		ConvertWStringToString(const std::wstring& a_str);
 
 	void			Dump();

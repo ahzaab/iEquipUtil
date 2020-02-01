@@ -3,22 +3,21 @@
 
 namespace UIExt
 {
-	RE::TESForm* GetFormAtInventoryIndex(RE::StaticFunctionTag*, UInt32 a_index)
+	RE::TESForm* GetFormAtInventoryIndex(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, UInt32 a_index)
 	{
-		auto mm = RE::MenuManager::GetSingleton();
-		auto uiStr = RE::InterfaceStrings::GetSingleton();
-		auto invMenu = mm->GetMenu<RE::InventoryMenu>(uiStr->inventoryMenu);
+		auto ui = RE::UI::GetSingleton();
+		auto invMenu = ui->GetMenu<RE::InventoryMenu>();
 		if (!invMenu) {
-			_WARNING("Inventory menu is not open!");
+			a_vm->TraceStack("Inventory menu is not open!", a_stackID, Severity::kWarning);
 			return 0;
 		} else if (!invMenu->itemList) {
-			_WARNING("Inventory menu has no item list!");
+			a_vm->TraceStack("Inventory menu has no item list!", a_stackID, Severity::kWarning);
 			return 0;
 		}
 
 		auto& items = invMenu->itemList->items;
 		if (a_index >= items.size()) {
-			_WARNING("Index is out of range!");
+			a_vm->TraceStack("Index is out of range!", a_stackID, Severity::kWarning);
 			return 0;
 		}
 
@@ -27,7 +26,7 @@ namespace UIExt
 	}
 
 
-	bool RegisterFuncs(RE::BSScript::Internal::VirtualMachine* a_vm)
+	bool RegisterFuncs(VM* a_vm)
 	{
 		a_vm->RegisterFunction("GetFormAtInventoryIndex", "iEquip_UIExt", GetFormAtInventoryIndex);
 

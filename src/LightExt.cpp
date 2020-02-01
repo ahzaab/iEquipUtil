@@ -5,10 +5,10 @@
 
 namespace LightExt
 {
-	SInt32 GetLightDuration(RE::StaticFunctionTag*, RE::TESObjectLIGH* a_light)
+	SInt32 GetLightDuration(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, const RE::TESObjectLIGH* a_light)
 	{
 		if (!a_light) {
-			_WARNING("a_light is a NONE form!");
+			a_vm->TraceStack("a_light is a NONE form!", a_stackID, Severity::kWarning);
 			return -1;
 		}
 
@@ -16,10 +16,10 @@ namespace LightExt
 	}
 
 
-	SInt32 GetLightRadius(RE::StaticFunctionTag*, RE::TESObjectLIGH* a_light)
+	SInt32 GetLightRadius(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, const RE::TESObjectLIGH* a_light)
 	{
 		if (!a_light) {
-			_WARNING("a_light is a NONE form!");
+			a_vm->TraceStack("a_light is a NONE form!", a_stackID, Severity::kWarning);
 			return -1;
 		}
 
@@ -27,13 +27,13 @@ namespace LightExt
 	}
 
 
-	void SetLightRadius(RE::StaticFunctionTag*, RE::TESObjectLIGH* a_light, SInt32 a_radius)
+	void SetLightRadius(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, RE::TESObjectLIGH* a_light, SInt32 a_radius)
 	{
 		if (!a_light) {
-			_WARNING("a_light is a NONE form!");
+			a_vm->TraceStack("a_light is a NONE form!", a_stackID, Severity::kWarning);
 			return;
 		} else if (a_radius < 0) {
-			_WARNING("a_radius can not be negative!");
+			a_vm->TraceStack("a_radius can not be negative!", a_stackID, Severity::kWarning);
 			return;
 		}
 
@@ -52,10 +52,10 @@ namespace LightExt
 	}
 
 
-	bool RegisterFuncs(RE::BSScript::Internal::VirtualMachine* a_vm)
+	bool RegisterFuncs(VM* a_vm)
 	{
-		a_vm->RegisterFunction("GetLightDuration", "iEquip_LightExt", GetLightDuration);
-		a_vm->RegisterFunction("GetLightRadius", "iEquip_LightExt", GetLightRadius);
+		a_vm->RegisterFunction("GetLightDuration", "iEquip_LightExt", GetLightDuration, true);
+		a_vm->RegisterFunction("GetLightRadius", "iEquip_LightExt", GetLightRadius, true);
 		a_vm->RegisterFunction("SetLightRadius", "iEquip_LightExt", SetLightRadius);
 
 		return true;

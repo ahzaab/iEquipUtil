@@ -142,7 +142,7 @@ namespace
 		switch (a_msg->type) {
 		case SKSE::MessagingInterface::kDataLoaded:
 			{
-				if (Settings::loadSettings()) {
+				if (Settings::LoadSettings()) {
 					_MESSAGE("Settings loaded successfully");
 				} else {
 					_ERROR("Encountered error while loading settings!\n");

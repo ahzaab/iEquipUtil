@@ -153,6 +153,7 @@
     <ClCompile Include="src\Hooks.cpp" />
     <ClCompile Include="src\InventoryExt.cpp" />
     <ClCompile Include="src\LightExt.cpp" />
+    <ClCompile Include="src\MagicEffectExt.cpp" />
     <ClCompile Include="src\ObjectReferenceExt.cpp" />
     <ClCompile Include="src\Papyrus.cpp" />
     <ClCompile Include="src\Registration.cpp" />
@@ -185,6 +186,7 @@
     <ClInclude Include="include\Hooks.h" />
     <ClInclude Include="include\InventoryExt.h" />
     <ClInclude Include="include\LightExt.h" />
+    <ClInclude Include="include\MagicEffectExt.h" />
     <ClInclude Include="include\ObjectReferenceExt.h" />
     <ClInclude Include="include\Papyrus.h" />
     <ClInclude Include="include\Registration.h" />

@@ -5,10 +5,10 @@
 
 namespace ObjectReferenceExt
 {
-	RE::TESForm* GetNthFormOfType(RE::StaticFunctionTag*, RE::TESObjectREFR* a_container, UInt32 a_type, UInt32 a_n)
+	RE::TESForm* GetNthFormOfType(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, RE::TESObjectREFR* a_container, UInt32 a_type, UInt32 a_n)
 	{
 		if (!a_container) {
-			_WARNING("a_container is a NONE form!");
+			a_vm->TraceStack("a_container is a NONE form!", a_stackID, Severity::kWarning);
 			return 0;
 		} else if (a_type > to_underlying(RE::FormType::Max)) {
 			_WARNING("a_type is out of range!");
@@ -32,13 +32,13 @@ namespace ObjectReferenceExt
 	}
 
 
-	SInt32 GetNumItemsOfType(RE::StaticFunctionTag*, RE::TESObjectREFR* a_container, UInt32 a_type)
+	SInt32 GetNumItemsOfType(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, RE::TESObjectREFR* a_container, UInt32 a_type)
 	{
 		if (!a_container) {
-			_WARNING("a_container is a NONE form!");
+			a_vm->TraceStack("a_container is a NONE form!", a_stackID, Severity::kWarning);
 			return -1;
 		} else if (a_type > to_underlying(RE::FormType::Max)) {
-			_WARNING("a_type is out of range!");
+			a_vm->TraceStack("a_type is out of range!", a_stackID, Severity::kWarning);
 			return -1;
 		}
 
@@ -59,7 +59,7 @@ namespace ObjectReferenceExt
 	}
 
 
-	bool RegisterFuncs(RE::BSScript::Internal::VirtualMachine* a_vm)
+	bool RegisterFuncs(VM* a_vm)
 	{
 		a_vm->RegisterFunction("GetNthFormOfType", "iEquip_ObjectReferenceExt", GetNthFormOfType);
 		a_vm->RegisterFunction("GetNumItemsOfType", "iEquip_ObjectReferenceExt", GetNumItemsOfType);
