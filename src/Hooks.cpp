@@ -1,6 +1,5 @@
 #include"Hooks.h"
 
-#include "skse64/GameReferences.h"
 #include "skse64_common/SafeWrite.h"
 
 #include <cassert>
@@ -8,6 +7,7 @@
 #include <typeinfo>
 
 #include "RE/Skyrim.h"
+#include "REL/Relocation.h"
 
 #include "RefHandleManager.h"
 #include "Registration.h"
@@ -22,15 +22,15 @@ namespace Hooks
 		public:
 			static void InstallHooks()
 			{
-				REL::Offset<RemoveItem_t**> removeItem(RE::Offset::PlayerCharacter::Vtbl + (0x8 * 0x56));
+				REL::Offset<RemoveItem_t*> removeItem(RE::Offset::PlayerCharacter::Vtbl + (0x8 * 0x56));
 				_RemoveItem = *removeItem;
 				SafeWrite64(removeItem.GetAddress(), unrestricted_cast<std::uintptr_t>(&PlayerCharacterEx::Hook_RemoveItem));
 
-				REL::Offset<AddObjectToContainer_t**> addObjectToContainer(RE::Offset::PlayerCharacter::Vtbl + (0x8 * 0x5A));
+				REL::Offset<AddObjectToContainer_t*> addObjectToContainer(RE::Offset::PlayerCharacter::Vtbl + (0x8 * 0x5A));
 				_AddObjectToContainer = *addObjectToContainer;
 				SafeWrite64(addObjectToContainer.GetAddress(), unrestricted_cast<std::uintptr_t>(&PlayerCharacterEx::Hook_AddObjectToContainer));
 
-				REL::Offset<PickUpObject_t**> pickUpItem(RE::Offset::PlayerCharacter::Vtbl + (0x8 * 0xCC));
+				REL::Offset<PickUpObject_t*> pickUpItem(RE::Offset::PlayerCharacter::Vtbl + (0x8 * 0xCC));
 				_PickUpObject = *pickUpItem;
 				SafeWrite64(pickUpItem.GetAddress(), unrestricted_cast<std::uintptr_t>(&PlayerCharacterEx::Hook_PickUpObject));
 
@@ -38,14 +38,14 @@ namespace Hooks
 			}
 
 		private:
-			using RemoveItem_t = function_type_t<decltype(&RE::PlayerCharacter::RemoveItem)>;	// 56
-			inline static RemoveItem_t* _RemoveItem = 0;
+			using RemoveItem_t = decltype(&RE::PlayerCharacter::RemoveItem);	// 56
+			inline static REL::Function<RemoveItem_t> _RemoveItem;
 
-			using AddObjectToContainer_t = function_type_t<decltype(&RE::PlayerCharacter::AddObjectToContainer)>;	// 5A
-			inline static AddObjectToContainer_t* _AddObjectToContainer = 0;
+			using AddObjectToContainer_t = decltype(&RE::PlayerCharacter::AddObjectToContainer);	// 5A
+			inline static REL::Function<AddObjectToContainer_t> _AddObjectToContainer;
 
-			using PickUpObject_t = function_type_t<decltype(&RE::PlayerCharacter::PickUpObject)>;	// CC
-			inline static PickUpObject_t* _PickUpObject = 0;
+			using PickUpObject_t = decltype(&RE::PlayerCharacter::PickUpObject);	// CC
+			inline static REL::Function<PickUpObject_t> _PickUpObject;
 
 
 			RE::ObjectRefHandle Hook_RemoveItem(RE::TESBoundObject* a_object, SInt32 a_count, RE::ITEM_REMOVE_REASON a_reason, RE::ExtraDataList* a_extraList, RE::TESObjectREFR* a_moveToRef, const RE::NiPoint3* a_dropLoc, const RE::NiPoint3* a_rotate)
@@ -98,7 +98,7 @@ namespace Hooks
 				_PickUpObject(this, a_object, count, a_arg3, a_playSound);
 
 				while (countLeft-- > 0) {
-					_AddObjectToContainer(this, a_object->GetBaseObject(), 0, 1, 0);
+					_AddObjectToContainer(this, a_object->GetBaseObject(), nullptr, 1, nullptr);
 				}
 			}
 		};
