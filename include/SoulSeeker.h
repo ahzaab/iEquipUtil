@@ -53,6 +53,8 @@ namespace SoulSeeker
 
 
 		using GemList = std::vector<SoulGem>;
+		using Count = SInt32;
+		using InventoryItemMap = std::unordered_map<RE::TESBoundObject*, std::pair<Count, std::unique_ptr<RE::InventoryEntryData>>>;
 
 
 		const SoulGem&	NearestNeighbour(const GemList& a_gems, const SoulGem& a_comp);
@@ -60,6 +62,7 @@ namespace SoulSeeker
 		bool			IsReusable(RE::TESSoulGem* a_gem);
 		void			ApplyVerticalShift(SoulLevel a_reqCharge, FillMethod a_fillMethod, GemList& a_gems);
 		GemList			ParseContainer(RE::TESObjectREFR* a_container, bool a_partialFill);
+		GemList			ParseInventory(InventoryItemMap& a_itemMap, bool a_partialFill);
 	}
 
 

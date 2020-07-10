@@ -137,11 +137,12 @@ namespace SoulSeeker
 
 			for (auto& item : inv) {
 				auto& entryData = item.second.second;
-				if (entryData->extraLists) {
-					auto soulGem = static_cast<RE::TESSoulGem*>(entryData->object);
-					auto gemSize = soulGem->GetMaximumCapacity();
+				auto soulGem = static_cast<RE::TESSoulGem*>(entryData->object);
+				auto gemSize = soulGem->GetMaximumCapacity();
 
-					SInt32 rawCount = item.second.first;
+				SInt32 rawCount = item.second.first;
+				if (entryData->extraLists)
+				{
 					for (auto& xList : *entryData->extraLists) {
 						auto xSoul = xList->GetByType<RE::ExtraSoul>();
 						if (xSoul) {
@@ -150,11 +151,61 @@ namespace SoulSeeker
 						}
 						rawCount -= xList->GetCount();
 					}
+				}
 
-					if (rawCount > 0) {
-						auto soulSize = soulGem->GetContainedSoul();
-						considerGem({ gemSize, soulSize, entryData.get(), 0 });
+				if (rawCount > 0) {
+					auto soulSize = soulGem->GetContainedSoul();
+					auto entryDataPtr = entryData.get();
+					considerGem({ gemSize, soulSize, entryDataPtr, 0 });
+				}
+			}
+
+			return acceptedGems.empty() ? rejectedGems : acceptedGems;
+		}
+
+		GemList ParseInventory(InventoryItemMap& a_itemMap, bool a_partialFill)
+		{
+			GemList acceptedGems;
+			GemList rejectedGems;
+			auto considerGem = [&](SoulGem a_soulGem) -> void
+			{
+				if (a_soulGem.soulSize > SoulLevel::kNone) {
+					if (!a_partialFill) {
+						if (a_soulGem.soulSize == a_soulGem.gemSize) {
+							acceptedGems.emplace_back(std::move(a_soulGem));
+						}
+						else {
+							rejectedGems.emplace_back(std::move(a_soulGem));
+						}
 					}
+					else {
+						acceptedGems.emplace_back(std::move(a_soulGem));
+					}
+				}
+			};
+
+			for (auto& item : a_itemMap) {
+				auto& entryData = item.second.second;
+				auto soulGem = static_cast<RE::TESSoulGem*>(entryData->object);
+				auto gemSize = soulGem->GetMaximumCapacity();
+
+				SInt32 rawCount = item.second.first;
+				if (entryData->extraLists)
+				{
+					for (auto& xList : *entryData->extraLists) {
+						auto xSoul = xList->GetByType<RE::ExtraSoul>();
+						if (xSoul) {
+							auto soulSize = xSoul->GetContainedSoul();
+							considerGem({ gemSize, soulSize, entryData.get(), xList });
+						}
+						rawCount -= xList->GetCount();
+					}
+				}
+
+				if (rawCount > 0) {
+					auto soulSize = soulGem->GetContainedSoul();
+					auto entryDataPtr = entryData.get();
+					considerGem({ gemSize, soulSize, entryDataPtr, 0 });
 				}
 			}
 
@@ -175,7 +226,14 @@ namespace SoulSeeker
 		}
 
 		auto player = RE::PlayerCharacter::GetSingleton();
-		auto gems = ParseContainer(player, a_partialFill);
+		//auto gems = ParseContainer(player, a_partialFill); // RE::InventoryEntryData->object loses scope
+
+		auto inv = player->GetInventory([](RE::TESBoundObject* a_object) -> bool
+			{
+				return a_object->IsSoulGem();
+			});
+		auto gems = ParseInventory(inv, a_partialFill);
+
 		if (gems.empty()) {
 			a_vm->TraceStack("No soul gems found!", a_stackID, Severity::kError);
 			return -1;

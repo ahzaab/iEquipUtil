@@ -15,6 +15,8 @@ namespace InventoryExt
 	namespace
 	{
 		using EntryData = RefHandleManager::EntryData;
+		using Count = SInt32;
+		using InventoryItemMap = std::unordered_map<RE::TESBoundObject*, std::pair<Count, RE::InventoryEntryData*>>;
 
 
 		enum class EquipSlot : UInt32
@@ -40,7 +42,7 @@ namespace InventoryExt
 		std::optional<EntryData> LookupEntry(VM* a_vm, StackID a_stackID, RE::TESForm* a_item, UInt32 a_refHandle)
 		{
 			auto manager = RefHandleManager::GetSingleton();
-			auto result = manager->LookupEntry(a_item, a_refHandle);
+			auto result = manager->LookupEntry(a_item, static_cast<RefHandleManager::RefHandle>(a_refHandle));
 			if (!result) {
 				a_vm->TraceStack("Failed to find item!", a_stackID, Severity::kError);
 			}
@@ -169,6 +171,55 @@ namespace InventoryExt
 
 			return true;
 		}
+
+		auto GetInventory(RE::TESObjectREFR* a_object, std::function<bool(RE::TESBoundObject*)> a_filter)
+			-> InventoryItemMap
+		{
+			// a version of GetInventory without smart pointers that injects the items into InventoryChanges like old iEquipUtil,
+			// because for some reason that works
+			InventoryItemMap results;
+
+			auto invChanges = a_object->GetInventoryChanges();
+			if (invChanges && invChanges->entryList) {
+				for (auto& entry : *invChanges->entryList) {
+					if (entry && entry->object && a_filter(entry->object)) {
+						auto mapped = std::make_pair(entry->countDelta, entry);
+						auto it = results.insert(std::make_pair(entry->object, mapped));
+						assert(it.second);
+					}
+				}
+			}
+
+			auto container = a_object->GetContainer();
+			if (container) {
+				container->ForEachContainerObject([&](RE::ContainerObject* a_entry) -> bool {
+					if (a_entry->obj && a_filter(a_entry->obj)) {
+						auto it = results.find(a_entry->obj);
+						if (it == results.end()) {
+							auto entryData = new RE::InventoryEntryData(a_entry->obj, 0);
+							auto mapped = std::make_pair(a_entry->count, entryData);
+							auto insIt = results.insert(std::make_pair(a_entry->obj, mapped));
+							invChanges->AddEntryData(entryData); // added this
+							assert(insIt.second);
+						}
+						else {
+							it->second.first += a_entry->count;
+						}
+					}
+					return true;
+					});
+			}
+
+			return results;
+		}
+
+		auto GetInventory(RE::TESObjectREFR* a_object)
+			-> InventoryItemMap
+		{
+			return GetInventory(a_object, []([[maybe_unused]] RE::TESBoundObject*) -> bool {
+				return true;
+				});
+		}
 	}
 
 
@@ -217,6 +268,13 @@ namespace InventoryExt
 
 		auto regs = OnRefHandleInvalidatedRegSet::GetSingleton();
 		regs->Unregister(a_thisForm);
+	}
+
+
+	void ClearAllRefHandles(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*)
+	{
+		auto regs = RefHandleManager::GetSingleton();
+		regs->Clear();
 	}
 
 
@@ -271,7 +329,8 @@ namespace InventoryExt
 		}
 
 		auto equipManager = RE::ActorEquipManager::GetSingleton();
-		equipManager->EquipItem(a_actor, a_item, extraList, equipCount, *slot, a_equipSound, a_preventUnequip, false, 0);
+		auto a_object = static_cast<RE::TESBoundAnimObject*>(a_item);
+		equipManager->EquipObject(a_actor, a_object, extraList, equipCount, *slot, a_equipSound, a_preventUnequip, false, 0);
 	}
 
 
@@ -309,7 +368,7 @@ namespace InventoryExt
 			return "";
 		}
 
-		entryData->invEntryData->GenerateName();
+		//entryData->invEntryData->GetDisplayName(); // unused?
 		auto xText = entryData->extraList->GetByType<RE::ExtraTextDisplayData>();
 		if (xText) {
 			return xText->displayName;
@@ -475,7 +534,7 @@ namespace InventoryExt
 			return "";
 		}
 
-		entryData->invEntryData->GenerateName();
+		//entryData->invEntryData->GetDisplayName(); // unused?
 		auto xText = entryData->extraList->GetByType<RE::ExtraTextDisplayData>();
 		if (xText && xText->IsPlayerSet()) {
 			std::string name(xText->displayName.c_str(), xText->customNameLength);
@@ -494,7 +553,7 @@ namespace InventoryExt
 		{
 			auto manager = RefHandleManager::GetSingleton();
 			auto player = RE::PlayerCharacter::GetSingleton();
-			auto inv = player->GetInventory([&](RE::TESBoundObject* a_object) -> bool
+			auto inv = GetInventory(player, [&](RE::TESBoundObject* a_object) -> bool
 			{
 				return manager->IsTrackedType(a_object);
 			});
@@ -573,7 +632,7 @@ namespace InventoryExt
 
 		auto xPoison = entryData->extraList->GetByType<RE::ExtraPoison>();
 		if (!xPoison) {
-			xPoison = new RE::ExtraPoison();
+			xPoison = new RE::ExtraPoison(a_newPoison, a_newCount);
 			entryData->extraList->Add(xPoison);
 		}
 		xPoison->poison = a_newPoison;
@@ -609,6 +668,7 @@ namespace InventoryExt
 		a_vm->RegisterFunction("UnregisterForOnRefHandleActiveEvent", "iEquip_InventoryExt", UnregisterForOnRefHandleActiveEvent, true);
 		a_vm->RegisterFunction("RegisterForOnRefHandleInvalidatedEvent", "iEquip_InventoryExt", RegisterForOnRefHandleInvalidatedEvent, true);
 		a_vm->RegisterFunction("UnregisterForOnRefHandleInvalidatedEvent", "iEquip_InventoryExt", UnregisterForOnRefHandleInvalidatedEvent, true);
+		a_vm->RegisterFunction("ClearAllRefHandles", "iEquip_InventoryExt", ClearAllRefHandles);
 		a_vm->RegisterFunction("EquipItem", "iEquip_InventoryExt", EquipItem);
 		a_vm->RegisterFunction("GetEnchantment", "iEquip_InventoryExt", GetEnchantment);
 		a_vm->RegisterFunction("GetLongName", "iEquip_InventoryExt", GetLongName);

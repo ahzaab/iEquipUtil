@@ -24,12 +24,12 @@ std::wstring LocaleManager::ConvertStringToWString(const std::string& a_str)
 		return std::wstring();
 	}
 
-	auto size = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, a_str.c_str(), a_str.length(), NULL, 0);
+	auto size = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, a_str.c_str(), static_cast<int>(a_str.length()), NULL, 0);
 	bool err = size == 0;
 	if (!err) {
 		std::wstring strTo;
 		strTo.resize(size);
-		err = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, a_str.c_str(), a_str.length(), strTo.data(), size) == 0;
+		err = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, a_str.c_str(), static_cast<int>(a_str.length()), strTo.data(), size) == 0;
 		if (!err) {
 			return strTo;
 		}
@@ -49,12 +49,12 @@ std::string LocaleManager::ConvertWStringToString(const std::wstring& a_str)
 		return std::string();
 	}
 
-	auto size = WideCharToMultiByte(CP_UTF8, 0, a_str.c_str(), a_str.length(), NULL, 0, NULL, NULL);
+	auto size = WideCharToMultiByte(CP_UTF8, 0, a_str.c_str(), static_cast<int>(a_str.length()), NULL, 0, NULL, NULL);
 	bool err = size == 0;
 	if (!err) {
 		std::string strTo;
 		strTo.resize(size);
-		err = WideCharToMultiByte(CP_UTF8, 0, a_str.c_str(), a_str.length(), strTo.data(), size, NULL, NULL) == 0;
+		err = WideCharToMultiByte(CP_UTF8, 0, a_str.c_str(), static_cast<int>(a_str.length()), strTo.data(), size, NULL, NULL) == 0;
 		if (!err) {
 			return strTo;
 		}
@@ -227,7 +227,16 @@ std::wstring LocaleManager::GetLocalizationInternal(const std::wstring& a_key)
 	while (!stack.empty()) {
 		stack.pop();
 	}
-	InsertLocalizations(*localization, stack, queue);
+	if (InsertLocalizations(*localization, stack, queue))
+	{
+		for (size_type i = 0, j = 1; j < localization->length(); ++i, ++j)
+		{
+			if (localization->at(i) == L'\\' && localization->at(j) == L'n')
+			{
+				localization->replace(i, 2, L"\n");
+			}
+		}
+	}
 	return *localization;
 }
 

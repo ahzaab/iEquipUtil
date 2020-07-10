@@ -130,9 +130,9 @@ bool RefHandleManager::InvalidateAndDispatch(const RE::TESForm* a_item, UniqueID
 	}
 
 	auto handle = it->second;
-	_handleToIDMap.erase(handle);
+	/*_handleToIDMap.erase(handle);
 	UnmarkHandle(handle);
-	_idToHandleMap.erase(it);
+	_idToHandleMap.erase(it);*/ // this is done later in OnRefHandleInvalidated
 
 	auto regs = OnRefHandleInvalidatedRegSet::GetSingleton();
 	regs->QueueEvent(a_item, handle);
@@ -268,6 +268,7 @@ auto RefHandleManager::ProcessEvent(const RE::TESUniqueIDChangeEvent* a_event, R
 	if (it != _idToHandleMap.end()) {	// update id change
 		auto handle = it->second;
 		_handleToIDMap.erase(handle);
+		UnmarkHandle(handle);
 		_idToHandleMap.erase(it);
 
 		if (a_event->newUniqueID == kInvalidUniqueID) {
@@ -298,9 +299,7 @@ auto RefHandleManager::ActivateAndDispatch(const RE::TESForm* a_item, RE::ExtraD
 {
 	auto xID = a_extraList.GetByType<RE::ExtraUniqueID>();
 	if (!xID) {
-		xID = new RE::ExtraUniqueID();
-		xID->baseID = kPlayerRefID;
-		xID->uniqueID = GetNextUniqueID();
+		xID = new RE::ExtraUniqueID(kPlayerRefID, GetNextUniqueID());
 		a_extraList.Add(xID);
 	}
 
@@ -317,7 +316,7 @@ auto RefHandleManager::ActivateAndDispatch(const RE::TESForm* a_item, RE::ExtraD
 auto RefHandleManager::GetFreeHandle()
 	-> RefHandle
 {
-	for (std::size_t i = 0; i < kRefArrSize; ++i) {
+	for (UInt16 i = 0; i < kRefArrSize; ++i) {
 		if (_activeHandles[i] != 0xFF) {
 			for (UInt8 j = 0; j < 8; ++j) {
 				if (((_activeHandles[i] >> j) & 1) == 0) {

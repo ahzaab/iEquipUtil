@@ -33,7 +33,7 @@ namespace ActorExt
 		default:
 			{
 				auto mod = a_actor->avStorage.modifiers[actorValue];
-				return mod ? mod->modifiers[Modifier::kDamage] : 0.0;
+				return mod ? mod->modifiers[Modifier::kDamage] : 0.0f;
 			}
 		}
 	}

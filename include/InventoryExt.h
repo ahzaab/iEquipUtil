@@ -16,6 +16,7 @@ namespace InventoryExt
 	void	RegisterForOnRefHandleInvalidatedEvent(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, const RE::TESForm* a_thisForm);
 	void	UnregisterForOnRefHandleInvalidatedEvent(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, const RE::TESForm* a_thisForm);
 
+	void					ClearAllRefHandles(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*);
 	void					EquipItem(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, RE::TESForm* a_item, UInt32 a_refHandle, RE::Actor* a_actor, UInt32 a_equipSlot, bool a_preventUnequip, bool a_equipSound);
 	RE::EnchantmentItem*	GetEnchantment(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, RE::TESForm* a_item, UInt32 a_refHandle);
 	RE::BSFixedString		GetLongName(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, RE::TESForm* a_item, UInt32 a_refHandle);

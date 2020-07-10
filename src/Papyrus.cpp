@@ -7,6 +7,7 @@
 #include "FormExt.h"
 #include "InventoryExt.h"
 #include "LightExt.h"
+#include "MagicEffectExt.h"
 #include "ObjectReferenceExt.h"
 #include "SoulSeeker.h"
 #include "SpellExt.h"
@@ -36,6 +37,9 @@ namespace Papyrus
 		papyrus->Register(LightExt::RegisterFuncs);
 		_MESSAGE("Registered iEquip_LightExt");
 
+		papyrus->Register(MagicEffectExt::RegisterFuncs);
+		_MESSAGE("Registered iEquip_MagicEffectExt");
+		
 		papyrus->Register(ObjectReferenceExt::RegisterFuncs);
 		_MESSAGE("Registered iEquip_ObjectReferenceExt");
 
