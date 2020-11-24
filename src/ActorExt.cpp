@@ -23,13 +23,13 @@ namespace ActorExt
 		auto actorValue = static_cast<RE::ActorValue>(a_actorValue);
 		switch (actorValue) {
 		case RE::ActorValue::kHealth:
-			return a_actor->healthModifiers.modifiers[Modifier::kDamage];
+			return std::abs(a_actor->healthModifiers.modifiers[Modifier::kDamage]);
 		case RE::ActorValue::kMagicka:
-			return a_actor->magickaModifiers.modifiers[Modifier::kDamage];
+			return std::abs(a_actor->magickaModifiers.modifiers[Modifier::kDamage]);
 		case RE::ActorValue::kStamina:
-			return a_actor->staminaModifiers.modifiers[Modifier::kDamage];
+			return std::abs(a_actor->staminaModifiers.modifiers[Modifier::kDamage]);
 		case RE::ActorValue::kVoicePoints:
-			return a_actor->voicePointsModifiers.modifiers[Modifier::kDamage];
+			return std::abs(a_actor->voicePointsModifiers.modifiers[Modifier::kDamage]);
 		default:
 			{
 				auto mod = a_actor->avStorage.modifiers[actorValue];
