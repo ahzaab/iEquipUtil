@@ -77,8 +77,44 @@ namespace Hooks
 
 				while (countLeft-- > 0) {
 					a_extraList = 0;
-					manager->ActivateAndDispatch(a_object, a_extraList, 1);
+					//manager->ActivateAndDispatch(a_object, a_extraList, 1);
 					_AddObjectToContainer(this, a_object, a_extraList, 1, a_fromRefr);
+				}
+
+				auto invChanges = this->GetInventoryChanges();
+
+				if (invChanges && invChanges->entryList)
+				{
+					for (auto& entry : *invChanges->entryList)
+					{
+						auto item = entry->object;
+
+						if (item == a_object)
+						{
+							auto rawCount = entry->countDelta;
+
+							if (entry->extraLists)
+							{
+								for (auto& xList : *entry->extraLists)
+								{
+									if (xList)
+									{
+										auto count = xList->GetCount();
+										rawCount -= count;
+										manager->ActivateAndDispatch(item, xList, count);
+									}
+								}
+							}
+
+							RE::ExtraDataList* xList;
+							while (rawCount-- > 0)
+							{
+								xList = 0;
+								manager->ActivateAndDispatch(item, xList, 1);
+								entry->AddExtraList(xList);
+							}
+						}
+					}
 				}
 			}
 
