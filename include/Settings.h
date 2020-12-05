@@ -8,7 +8,6 @@
 #include "RE/Skyrim.h"
 
 #include "Json2Settings.h"
-#include "SKSE/VArgFormatter.h"
 
 
 template <class T> using aSetting = Json2Settings::aSetting<T>;
@@ -79,7 +78,7 @@ namespace Json2Settings
 			auto dmp = key();
 			dmp += ":";
 			for (auto& elem : _container) {
-				dmp += SKSE::VArgFormatter("\n\t[0x%08X]", elem.first).str();
+				//dmp += SKSE::VArgFormatter("\n\t[0x%08X]", elem.first).str();
 			}
 			return dmp;
 		}

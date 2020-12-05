@@ -1,3 +1,5 @@
+#include "pch.h"
+
 #include "Events.h"
 
 #include <limits>
@@ -17,14 +19,14 @@ namespace Events
 		};
 
 
-		UInt32 GetEquippedSlots(RE::TESObjectWEAP* a_weap)
+		uint32_t GetEquippedSlots(RE::TESObjectWEAP* a_weap)
 		{
 			auto player = RE::PlayerCharacter::GetSingleton();
 
 			auto rightHand = player->currentProcess->GetEquippedRightHand();
 			auto leftHand = player->currentProcess->GetEquippedLeftHand();
 
-			UInt32 slotID = 0;
+			uint32_t slotID = 0;
 			if (rightHand && rightHand->formID == a_weap->formID) {
 				slotID += kSlotID_Right;
 			}
@@ -35,11 +37,11 @@ namespace Events
 		}
 
 
-		UInt32 GetUnequippedSlots()
+		uint32_t GetUnequippedSlots()
 		{
 			auto player = RE::PlayerCharacter::GetSingleton();
 
-			UInt32 slotID = !player->currentProcess->GetEquippedRightHand() ? kSlotID_Right : kSlotID_Default;
+			uint32_t slotID = !player->currentProcess->GetEquippedRightHand() ? kSlotID_Right : kSlotID_Default;
 			slotID += !player->currentProcess->GetEquippedRightHand() ? kSlotID_Left : kSlotID_Default;
 			return slotID;
 		}
@@ -67,7 +69,7 @@ namespace Events
 
 		if (a_event->equipped) {
 			auto equipSlots = GetEquippedSlots(weap);
-			OnBoundWeaponEquippedRegSet::GetSingleton()->QueueEvent(to_underlying(weap->weaponData.animationType), equipSlots);
+			OnBoundWeaponEquippedRegSet::GetSingleton()->QueueEvent(weap->weaponData.animationType.underlying(), equipSlots);
 		} else {
 			auto unequipSlots = GetUnequippedSlots();
 			OnBoundWeaponUnequippedRegSet::GetSingleton()->QueueEvent(weap, unequipSlots);

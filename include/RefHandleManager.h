@@ -14,7 +14,7 @@ class RefHandleManager :
 	public RE::BSTEventSink<RE::TESUniqueIDChangeEvent>
 {
 private:
-	using SubType = UInt16;
+	using SubType = uint16_t;
 
 public:
 	using UniqueID = SubType;
@@ -40,11 +40,11 @@ public:
 
 	void	Register();
 	void	Clear() noexcept;
-	bool	Save(SKSE::SerializationInterface* a_intfc, UInt32 a_type, UInt32 a_version);
-	bool	Load(SKSE::SerializationInterface* a_intfc, UInt32 a_version);
+	bool	Save(SKSE::SerializationInterface* a_intfc, uint32_t a_type, uint32_t a_version);
+	bool	Load(SKSE::SerializationInterface* a_intfc, uint32_t a_version);
 
-	HandleResult	ActivateAndDispatch(const RE::TESForm* a_item, RE::ExtraDataList*& a_extraList, SInt32 a_count);
-	HandleResult	ActivateAndDispatch(const RE::TESForm* a_item, RE::ExtraDataList& a_extraList, SInt32 a_count);
+	HandleResult	ActivateAndDispatch(const RE::TESForm* a_item, RE::ExtraDataList*& a_extraList, int32_t a_count);
+	HandleResult	ActivateAndDispatch(const RE::TESForm* a_item, RE::ExtraDataList& a_extraList, int32_t a_count);
 	bool			InvalidateAndDispatch(const RE::TESForm* a_item, UniqueID a_uniqueID);
 	bool			TryInvalidateAndDispatch(const RE::TESForm* a_item, RE::ExtraDataList* a_extraList);
 
@@ -70,7 +70,7 @@ private:
 		kInvalidUniqueID = 0,
 		kPlayerRefID = 0x14,
 
-		kRefArrSize = std::numeric_limits<UInt16>::max() / 8,
+		kRefArrSize = std::numeric_limits<uint16_t>::max() / 8,
 		kLargestHandle = kRefArrSize * 8 - 1
 	};
 
@@ -85,7 +85,7 @@ private:
 
 	virtual	EventResult ProcessEvent(const RE::TESUniqueIDChangeEvent* a_event, RE::BSTEventSource<RE::TESUniqueIDChangeEvent>* a_dispatcher) override;
 
-	HandleResult ActivateAndDispatch(const RE::TESForm* a_item, RE::ExtraDataList& a_extraList, SInt32 a_count, RefHandle a_handle);
+	HandleResult ActivateAndDispatch(const RE::TESForm* a_item, RE::ExtraDataList& a_extraList, int32_t a_count, RefHandle a_handle);
 
 	RefHandle	GetFreeHandle();
 	void		MarkHandle(RefHandle a_handle);
@@ -97,6 +97,6 @@ private:
 	mutable Lock					_lock;
 	std::map<UniqueID, RefHandle>	_idToHandleMap;
 	std::map<RefHandle, UniqueID>	_handleToIDMap;
-	UInt8							_activeHandles[kRefArrSize];
+	uint8_t							_activeHandles[kRefArrSize];
 	bool							_init;
 };

@@ -1,3 +1,5 @@
+#include "pch.h"
+
 #include "LocaleManager.h"
 
 #include <string>
@@ -7,9 +9,7 @@
 #include <stack>
 #include <utility>
 #include <codecvt>
-
-#include "RE/Skyrim.h"
-
+#include <windows.h>
 
 LocaleManager* LocaleManager::GetSingleton()
 {
@@ -24,19 +24,13 @@ std::wstring LocaleManager::ConvertStringToWString(const std::string& a_str)
 		return std::wstring();
 	}
 
-	auto size = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, a_str.c_str(), static_cast<int>(a_str.length()), NULL, 0);
-	bool err = size == 0;
-	if (!err) {
-		std::wstring strTo;
-		strTo.resize(size);
-		err = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, a_str.c_str(), static_cast<int>(a_str.length()), strTo.data(), size) == 0;
-		if (!err) {
-			return strTo;
-		}
+	try {
+		auto strTo = std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(a_str);
+		return strTo;
 	}
-
-	if (err) {
-		_ERROR("MultiByteToWideChar failed with error code (%i)", GetLastError());
+	catch (const std::range_error& e)
+	{
+		_ERROR("MultiByteToWideChar failed with error code");
 	}
 
 	return std::wstring();

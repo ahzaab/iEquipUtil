@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "Papyrus.h"
 
 #include "SKSE/API.h"

@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "RefHandleManager.h"
 
 #include <algorithm>
@@ -33,7 +34,7 @@ void RefHandleManager::Clear() noexcept
 }
 
 
-bool RefHandleManager::Save(SKSE::SerializationInterface* a_intfc, UInt32 a_type, UInt32 a_version)
+bool RefHandleManager::Save(SKSE::SerializationInterface* a_intfc, uint32_t a_type, uint32_t a_version)
 {
 	Locker locker(_lock);
 
@@ -55,7 +56,7 @@ bool RefHandleManager::Save(SKSE::SerializationInterface* a_intfc, UInt32 a_type
 }
 
 
-bool RefHandleManager::Load(SKSE::SerializationInterface* a_intfc, UInt32 a_version)
+bool RefHandleManager::Load(SKSE::SerializationInterface* a_intfc, uint32_t a_version)
 {
 	Locker locker(_lock);
 
@@ -83,7 +84,7 @@ bool RefHandleManager::Load(SKSE::SerializationInterface* a_intfc, UInt32 a_vers
 }
 
 
-auto RefHandleManager::ActivateAndDispatch(const RE::TESForm* a_item, RE::ExtraDataList*& a_extraList, SInt32 a_count)
+auto RefHandleManager::ActivateAndDispatch(const RE::TESForm* a_item, RE::ExtraDataList*& a_extraList, int32_t a_count)
 -> HandleResult
 {
 	assert(a_item);
@@ -103,7 +104,7 @@ auto RefHandleManager::ActivateAndDispatch(const RE::TESForm* a_item, RE::ExtraD
 }
 
 
-auto RefHandleManager::ActivateAndDispatch(const RE::TESForm* a_item, RE::ExtraDataList& a_extraList, SInt32 a_count)
+auto RefHandleManager::ActivateAndDispatch(const RE::TESForm* a_item, RE::ExtraDataList& a_extraList, int32_t a_count)
 -> HandleResult
 {
 	assert(a_item);
@@ -178,9 +179,9 @@ auto RefHandleManager::LookupEntry(RE::TESForm* a_item, RefHandle a_handle)
 	auto idToFind = idIt->second;
 
 	auto player = RE::PlayerCharacter::GetSingleton();
-	auto inv = player->GetInventory([&](RE::TESBoundObject* a_object) -> bool
+	auto inv = player->GetInventory([&](RE::TESBoundObject& a_object) -> bool
 	{
-		return a_object == object;
+		return a_object.formID == object->formID;
 	});
 
 	auto invIt = inv.find(object);
@@ -217,7 +218,7 @@ bool RefHandleManager::IsTrackedType(const RE::TESForm* a_form) const
 {
 	assert(a_form);
 
-	switch (a_form->formType) {
+	switch (a_form->GetFormType()) {
 	case RE::FormType::Armor:
 	case RE::FormType::Weapon:
 		return true;
@@ -294,7 +295,7 @@ auto RefHandleManager::ProcessEvent(const RE::TESUniqueIDChangeEvent* a_event, R
 }
 
 
-auto RefHandleManager::ActivateAndDispatch(const RE::TESForm* a_item, RE::ExtraDataList& a_extraList, SInt32 a_count, RefHandle a_handle)
+auto RefHandleManager::ActivateAndDispatch(const RE::TESForm* a_item, RE::ExtraDataList& a_extraList, int32_t a_count, RefHandle a_handle)
 -> HandleResult
 {
 	auto xID = a_extraList.GetByType<RE::ExtraUniqueID>();
@@ -316,9 +317,9 @@ auto RefHandleManager::ActivateAndDispatch(const RE::TESForm* a_item, RE::ExtraD
 auto RefHandleManager::GetFreeHandle()
 	-> RefHandle
 {
-	for (UInt16 i = 0; i < kRefArrSize; ++i) {
+	for (uint16_t i = 0; i < kRefArrSize; ++i) {
 		if (_activeHandles[i] != 0xFF) {
-			for (UInt8 j = 0; j < 8; ++j) {
+			for (uint8_t j = 0; j < 8; ++j) {
 				if (((_activeHandles[i] >> j) & 1) == 0) {
 					_activeHandles[i] |= 1 << j;
 					return (i * 8) + j;
@@ -335,7 +336,7 @@ void RefHandleManager::MarkHandle(RefHandle a_handle)
 {
 	constexpr std::size_t SIZE = sizeof(std::remove_extent_t<decltype(_activeHandles)>) * 8;
 	std::size_t idx = a_handle / SIZE;
-	UInt8 bit = 1 << (a_handle % SIZE);
+	uint8_t bit = 1 << (a_handle % SIZE);
 	_activeHandles[idx] |= bit;
 }
 
@@ -344,7 +345,7 @@ void RefHandleManager::UnmarkHandle(RefHandle a_handle)
 {
 	constexpr std::size_t SIZE = sizeof(std::remove_extent_t<decltype(_activeHandles)>) * 8;
 	std::size_t idx = a_handle / SIZE;
-	UInt8 bit = 1 << (a_handle % SIZE);
+	uint8_t bit = 1 << (a_handle % SIZE);
 	_activeHandles[idx] &= ~bit;
 }
 

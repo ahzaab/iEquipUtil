@@ -10,7 +10,7 @@ namespace UIExt
 	using Severity = RE::BSScript::ErrorLogger::Severity;
 
 
-	RE::TESForm* GetFormAtInventoryIndex(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, UInt32 a_index);
+	RE::TESForm* GetFormAtInventoryIndex(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, uint32_t a_index);
 
 	bool RegisterFuncs(VM* a_vm);
 }

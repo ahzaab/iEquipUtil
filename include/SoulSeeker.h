@@ -17,7 +17,7 @@ namespace SoulSeeker
 		using SoulLevel = RE::SOUL_LEVEL;
 
 
-		enum class FillMethod : UInt32
+		enum class FillMethod : uint32_t
 		{
 			kSmallerSoulsFirst = 0,
 			kUseLargestSoul = 1
@@ -53,7 +53,7 @@ namespace SoulSeeker
 
 
 		using GemList = std::vector<SoulGem>;
-		using Count = SInt32;
+		using Count = int32_t;
 		using InventoryItemMap = std::unordered_map<RE::TESBoundObject*, std::pair<Count, std::unique_ptr<RE::InventoryEntryData>>>;
 
 
@@ -66,7 +66,7 @@ namespace SoulSeeker
 	}
 
 
-	SInt32 BringMeASoul(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, UInt32 a_reqCharge, UInt32 a_fillMethod, bool a_partialFill, bool a_wasteOK);
+	int32_t BringMeASoul(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, uint32_t a_reqCharge, uint32_t a_fillMethod, bool a_partialFill, bool a_wasteOK);
 
 	bool RegisterFuncs(VM* a_vm);
 }

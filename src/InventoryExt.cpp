@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "InventoryExt.h"
 
 #include <map>
@@ -15,11 +16,11 @@ namespace InventoryExt
 	namespace
 	{
 		using EntryData = RefHandleManager::EntryData;
-		using Count = SInt32;
+		using Count = int32_t;
 		using InventoryItemMap = std::unordered_map<RE::TESBoundObject*, std::pair<Count, RE::InventoryEntryData*>>;
 
 
-		enum class EquipSlot : UInt32
+		enum class EquipSlot : uint32_t
 		{
 			kDefault = 0,
 			kRight = 1,
@@ -27,7 +28,7 @@ namespace InventoryExt
 		};
 
 
-		enum class XEquipSlot : UInt32
+		enum class XEquipSlot : uint32_t
 		{
 			kLeftHand = 0,
 			kRightHand = 1,
@@ -39,7 +40,7 @@ namespace InventoryExt
 		};
 
 
-		std::optional<EntryData> LookupEntry(VM* a_vm, StackID a_stackID, RE::TESForm* a_item, UInt32 a_refHandle)
+		std::optional<EntryData> LookupEntry(VM* a_vm, StackID a_stackID, RE::TESForm* a_item, uint32_t a_refHandle)
 		{
 			auto manager = RefHandleManager::GetSingleton();
 			auto result = manager->LookupEntry(a_item, static_cast<RefHandleManager::RefHandle>(a_refHandle));
@@ -192,18 +193,18 @@ namespace InventoryExt
 
 			auto container = a_object->GetContainer();
 			if (container) {
-				container->ForEachContainerObject([&](RE::ContainerObject* a_entry) -> bool {
-					if (a_entry->obj && a_filter(a_entry->obj)) {
-						auto it = results.find(a_entry->obj);
+				container->ForEachContainerObject([&](RE::ContainerObject& a_entry) -> bool {
+					if (a_entry.obj && a_filter(a_entry.obj)) {
+						auto it = results.find(a_entry.obj);
 						if (it == results.end()) {
-							auto entryData = new RE::InventoryEntryData(a_entry->obj, 0);
-							auto mapped = std::make_pair(a_entry->count, entryData);
-							auto insIt = results.insert(std::make_pair(a_entry->obj, mapped));
+							auto entryData = new RE::InventoryEntryData(a_entry.obj, 0);
+							auto mapped = std::make_pair(a_entry.count, entryData);
+							auto insIt = results.insert(std::make_pair(a_entry.obj, mapped));
 							invChanges->AddEntryData(entryData); // added this
 							assert(insIt.second);
 						}
 						else {
-							it->second.first += a_entry->count;
+							it->second.first += a_entry.count;
 						}
 					}
 					return true;
@@ -278,7 +279,7 @@ namespace InventoryExt
 	}
 
 
-	void EquipItem(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, RE::TESForm* a_item, UInt32 a_refHandle, RE::Actor* a_actor, UInt32 a_equipSlot, bool a_preventUnequip, bool a_equipSound)
+	void EquipItem(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, RE::TESForm* a_item, uint32_t a_refHandle, RE::Actor* a_actor, uint32_t a_equipSlot, bool a_preventUnequip, bool a_equipSound)
 	{
 		if (!a_item) {
 			a_vm->TraceStack("a_item is a NONE form!", a_stackID, Severity::kWarning);
@@ -295,7 +296,7 @@ namespace InventoryExt
 
 		bool worn = false;
 		bool wornLeft = false;
-		SInt32 count = 1;
+		int32_t count = 1;
 		if (entryData->extraList) {
 			auto xCount = entryData->extraList->GetByType<RE::ExtraCount>();
 			if (xCount) {
@@ -312,13 +313,13 @@ namespace InventoryExt
 			return;
 		}
 
-		SInt32 countReq = (worn || wornLeft) ? 2 : 1;
+		int32_t countReq = (worn || wornLeft) ? 2 : 1;
 		if (count < countReq) {
 			a_vm->TraceStack("Item count is too small to equip!", a_stackID, Severity::kError);
 			return;
 		}
 
-		SInt32 equipCount;
+		int32_t equipCount;
 		RE::ExtraDataList* extraList;
 		if (a_item->IsAmmo()) {
 			equipCount = count;
@@ -334,7 +335,7 @@ namespace InventoryExt
 	}
 
 
-	RE::EnchantmentItem* GetEnchantment(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, RE::TESForm* a_item, UInt32 a_refHandle)
+	RE::EnchantmentItem* GetEnchantment(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, RE::TESForm* a_item, uint32_t a_refHandle)
 	{
 		if (!a_item) {
 			a_vm->TraceStack("a_item is a NONE form!", a_stackID, Severity::kWarning);
@@ -356,7 +357,7 @@ namespace InventoryExt
 	}
 
 
-	RE::BSFixedString GetLongName(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, RE::TESForm* a_item, UInt32 a_refHandle)
+	RE::BSFixedString GetLongName(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, RE::TESForm* a_item, uint32_t a_refHandle)
 	{
 		if (!a_item) {
 			a_vm->TraceStack("a_item is a NONE form!", a_stackID, Severity::kWarning);
@@ -379,7 +380,7 @@ namespace InventoryExt
 	}
 
 
-	RE::AlchemyItem* GetPoison(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, RE::TESForm* a_item, UInt32 a_refHandle)
+	RE::AlchemyItem* GetPoison(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, RE::TESForm* a_item, uint32_t a_refHandle)
 	{
 		if (!a_item) {
 			a_vm->TraceStack("a_item is a NONE form!", a_stackID, Severity::kWarning);
@@ -399,7 +400,7 @@ namespace InventoryExt
 	}
 
 
-	SInt32 GetPoisonCount(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, RE::TESForm* a_item, UInt32 a_refHandle)
+	int32_t GetPoisonCount(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, RE::TESForm* a_item, uint32_t a_refHandle)
 	{
 		if (!a_item) {
 			a_vm->TraceStack("a_item is a NONE form!", a_stackID, Severity::kWarning);
@@ -419,7 +420,7 @@ namespace InventoryExt
 	}
 
 
-	UInt32 GetRefHandleAtInvIndex(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, UInt32 a_index)
+	uint32_t GetRefHandleAtInvIndex(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, uint32_t a_index)
 	{
 		auto ui = RE::UI::GetSingleton();
 		auto invMenu = ui->GetMenu<RE::InventoryMenu>();
@@ -467,11 +468,11 @@ namespace InventoryExt
 	}
 
 
-	UInt32 GetRefHandleFromWornObject(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, UInt32 a_equipSlot)
+	uint32_t GetRefHandleFromWornObject(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, uint32_t a_equipSlot)
 	{
 		using FPFlag = RE::BGSBipedObjectForm::FirstPersonFlag;
 
-		UInt32 handle = RefHandleManager::kInvalidRefHandle;
+		uint32_t handle = RefHandleManager::kInvalidRefHandle;
 		RE::ExtraDataType xDataType;
 		RE::FormType formType;
 		FPFlag fpFlag;
@@ -481,9 +482,9 @@ namespace InventoryExt
 		}
 
 		auto player = RE::PlayerCharacter::GetSingleton();
-		auto inv = player->GetInventory([&](RE::TESBoundObject* a_object) -> bool
+		auto inv = player->GetInventory([&](RE::TESBoundObject& a_object) -> bool
 		{
-			if (a_object->Is(formType)) {
+			if (a_object.Is(formType)) {
 				switch (xEquipSlot) {
 				case XEquipSlot::kHead:
 				case XEquipSlot::kChest:
@@ -491,8 +492,8 @@ namespace InventoryExt
 				case XEquipSlot::kGloves:
 				case XEquipSlot::kShield:
 					{
-						auto armor = static_cast<RE::TESObjectARMO*>(a_object);
-						return armor->HasPartOf(fpFlag);
+						auto armor = static_cast<RE::TESObjectARMO&>(a_object);
+						return armor.HasPartOf(fpFlag);
 					}
 				default:
 					return true;
@@ -522,7 +523,7 @@ namespace InventoryExt
 	}
 
 
-	RE::BSFixedString GetShortName(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, RE::TESForm* a_item, UInt32 a_refHandle)
+	RE::BSFixedString GetShortName(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, RE::TESForm* a_item, uint32_t a_refHandle)
 	{
 		if (!a_item) {
 			a_vm->TraceStack("a_item is a NONE form!", a_stackID, Severity::kWarning);
@@ -586,7 +587,7 @@ namespace InventoryExt
 	}
 
 
-	void RemovePoison(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, RE::TESForm* a_item, UInt32 a_refHandle)
+	void RemovePoison(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, RE::TESForm* a_item, uint32_t a_refHandle)
 	{
 		if (!a_item) {
 			a_vm->TraceStack("a_item is a NONE form!", a_stackID, Severity::kWarning);
@@ -609,7 +610,7 @@ namespace InventoryExt
 	}
 
 
-	void SetPoison(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, RE::TESForm* a_item, UInt32 a_refHandle, RE::AlchemyItem* a_newPoison, UInt32 a_newCount)
+	void SetPoison(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, RE::TESForm* a_item, uint32_t a_refHandle, RE::AlchemyItem* a_newPoison, uint32_t a_newCount)
 	{
 		if (!a_item) {
 			a_vm->TraceStack("a_item is a NONE form!", a_stackID, Severity::kWarning);
@@ -640,7 +641,7 @@ namespace InventoryExt
 	}
 
 
-	void SetPoisonCount(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, RE::TESForm* a_item, UInt32 a_refHandle, UInt32 a_newCount)
+	void SetPoisonCount(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, RE::TESForm* a_item, uint32_t a_refHandle, uint32_t a_newCount)
 	{
 		if (!a_item) {
 			a_vm->TraceStack("a_item is a NONE form!", a_stackID, Severity::kWarning);

@@ -1,3 +1,4 @@
+#include "PCH.h"
 #include "ActorExt.h"
 
 #include <cmath>
@@ -8,14 +9,14 @@
 
 namespace ActorExt
 {
-	float GetAVDamage(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, const RE::Actor* a_actor, UInt32 a_actorValue)
+	float GetAVDamage(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, const RE::Actor* a_actor, uint32_t a_actorValue)
 	{
 		using Modifier = RE::ACTOR_VALUE_MODIFIERS;
 
 		if (!a_actor) {
 			a_vm->TraceStack("a_actor is a NONE form!", a_stackID, Severity::kWarning);
 			return 0.0;
-		} else if (a_actorValue >= to_underlying(RE::ActorValue::kTotal)) {
+		} else if (a_actorValue >= static_cast<uint32_t>(RE::ActorValue::kTotal)) {
 			a_vm->TraceStack("a_actorValue is out of range!", a_stackID, Severity::kWarning);
 			return 0.0;
 		}
@@ -64,9 +65,9 @@ namespace ActorExt
 		}
 
 		auto player = RE::PlayerCharacter::GetSingleton();
-		auto inv = player->GetInventory([](RE::TESBoundObject* a_object) -> bool
+		auto inv = player->GetInventory([](RE::TESBoundObject& a_object) -> bool
 		{
-			return a_object->IsAmmo();
+			return a_object.IsAmmo();
 		});
 
 		for (auto& elem : inv) {
@@ -84,7 +85,7 @@ namespace ActorExt
 	}
 
 
-	RE::TESObjectWEAP* GetEquippedWeapon(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, const RE::Actor* a_actor, UInt32 a_hand)
+	RE::TESObjectWEAP* GetEquippedWeapon(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, const RE::Actor* a_actor, uint32_t a_hand)
 	{
 		using EquippedHand = RE::AIProcess::Hand;
 

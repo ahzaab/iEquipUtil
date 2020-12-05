@@ -1,4 +1,5 @@
-﻿#include "skse64_common/skse_version.h"
+﻿#include "pch.h"
+#include "skse64_common/skse_version.h"
 
 #include <clocale>
 #include <cstdlib>
@@ -13,13 +14,12 @@
 #include "Settings.h"
 #include "version.h"
 
-#include "RE/Skyrim.h"
 #include "SKSE/API.h"
 
 
 namespace
 {
-	enum : UInt32
+	enum : uint32_t
 	{
 		kSerializationVersion = 2,
 		kOnBoundWeaponEquipped = 'OBWE',
@@ -30,9 +30,9 @@ namespace
 	};
 
 
-	std::string DecodeTypeCode(UInt32 a_typeCode)
+	std::string DecodeTypeCode(uint32_t a_typeCode)
 	{
-		constexpr std::size_t SIZE = sizeof(UInt32);
+		constexpr std::size_t SIZE = sizeof(uint32_t);
 
 		std::string sig;
 		sig.resize(SIZE);
@@ -72,9 +72,9 @@ namespace
 
 	void LoadCallback(SKSE::SerializationInterface* a_intfc)
 	{
-		UInt32 type;
-		UInt32 version;
-		UInt32 length;
+		uint32_t type;
+		uint32_t version;
+		uint32_t length;
 		while (a_intfc->GetNextRecordInfo(type, version, length)) {
 			if (version != kSerializationVersion) {
 				_ERROR("Loaded data is out of date! Read (%u), expected (%u) for type code (%s)", version, kSerializationVersion, DecodeTypeCode(type).c_str());

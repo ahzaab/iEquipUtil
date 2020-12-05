@@ -1,0 +1,8 @@
+[submodule "CommonLibSSE"]
+	path = CommonLibSSE
+	url = https://github.com/Ryan-rsm-McKenzie/CommonLibSSE.git
+	branch = master
+[submodule "Json2Settings"]
+	path = Json2Settings
+	url = https://github.com/Ryan-rsm-McKenzie/Json2Settings.git
+	branch = master

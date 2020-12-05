@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "SoulSeeker.h"
 
 #include <cassert>
@@ -140,7 +141,7 @@ namespace SoulSeeker
 				auto soulGem = static_cast<RE::TESSoulGem*>(entryData->object);
 				auto gemSize = soulGem->GetMaximumCapacity();
 
-				SInt32 rawCount = item.second.first;
+				int32_t rawCount = item.second.first;
 				if (entryData->extraLists)
 				{
 					for (auto& xList : *entryData->extraLists) {
@@ -189,7 +190,7 @@ namespace SoulSeeker
 				auto soulGem = static_cast<RE::TESSoulGem*>(entryData->object);
 				auto gemSize = soulGem->GetMaximumCapacity();
 
-				SInt32 rawCount = item.second.first;
+				int32_t rawCount = item.second.first;
 				if (entryData->extraLists)
 				{
 					for (auto& xList : *entryData->extraLists) {
@@ -214,7 +215,7 @@ namespace SoulSeeker
 	}
 
 
-	SInt32 BringMeASoul(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, UInt32 a_reqCharge, UInt32 a_fillMethod, bool a_partialFill, bool a_wasteOK)
+	int32_t BringMeASoul(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, uint32_t a_reqCharge, uint32_t a_fillMethod, bool a_partialFill, bool a_wasteOK)
 	{
 		using RemoveType = RE::ITEM_REMOVE_REASON;
 

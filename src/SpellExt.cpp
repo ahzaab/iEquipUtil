@@ -1,9 +1,10 @@
+#include "pch.h"
 #include "SpellExt.h"
 
 
 namespace SpellExt
 {
-	SInt32 GetBoundSpellWeapType(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, const RE::SpellItem* a_spell)
+	int32_t GetBoundSpellWeapType(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, const RE::SpellItem* a_spell)
 	{
 		using Archetype = RE::EffectArchetypes::ArchetypeID;
 		using AV = RE::ActorValue;
@@ -21,7 +22,7 @@ namespace SpellExt
 					if (item && item->IsWeapon()) {
 						auto weap = static_cast<RE::TESObjectWEAP*>(item);
 						if (weap->IsBound()) {
-							return static_cast<SInt32>(weap->weaponData.animationType);
+							return static_cast<int32_t>(weap->weaponData.animationType);
 						}
 					}
 				}

@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "LightExt.h"
 
 #include "SKSE/API.h"
@@ -5,7 +6,7 @@
 
 namespace LightExt
 {
-	SInt32 GetLightDuration(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, const RE::TESObjectLIGH* a_light)
+	int32_t GetLightDuration(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, const RE::TESObjectLIGH* a_light)
 	{
 		if (!a_light) {
 			a_vm->TraceStack("a_light is a NONE form!", a_stackID, Severity::kWarning);
@@ -16,7 +17,7 @@ namespace LightExt
 	}
 
 
-	SInt32 GetLightRadius(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, const RE::TESObjectLIGH* a_light)
+	int32_t GetLightRadius(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, const RE::TESObjectLIGH* a_light)
 	{
 		if (!a_light) {
 			a_vm->TraceStack("a_light is a NONE form!", a_stackID, Severity::kWarning);
@@ -27,7 +28,7 @@ namespace LightExt
 	}
 
 
-	void SetLightRadius(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, RE::TESObjectLIGH* a_light, SInt32 a_radius)
+	void SetLightRadius(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, RE::TESObjectLIGH* a_light, int32_t a_radius)
 	{
 		if (!a_light) {
 			a_vm->TraceStack("a_light is a NONE form!", a_stackID, Severity::kWarning);

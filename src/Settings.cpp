@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "Settings.h"
 
 #include <cstring>
