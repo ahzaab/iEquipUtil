@@ -64,9 +64,13 @@
     <ClCompile Include="src\PCH.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\HashUtil.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="exports.def" />
+    <None Include=".clang-format" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">
@@ -150,6 +154,9 @@
       <Filter>include\papyrus</Filter>
     </ClInclude>
     <ClInclude Include="include\PCH.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\HashUtil.h">
       <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>

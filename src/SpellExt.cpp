@@ -22,7 +22,7 @@ namespace SpellExt
 					if (item && item->IsWeapon()) {
 						auto weap = static_cast<RE::TESObjectWEAP*>(item);
 						if (weap->IsBound()) {
-							return static_cast<int32_t>(weap->weaponData.animationType);
+							return static_cast<int32_t>(weap->weaponData.animationType.underlying());
 						}
 					}
 				}

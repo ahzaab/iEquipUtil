@@ -19,44 +19,44 @@
 
 namespace Papyrus
 {
-	void Register()
-	{
-		auto papyrus = SKSE::GetPapyrusInterface();
+    void Register()
+    {
+        auto papyrus = SKSE::GetPapyrusInterface();
 
-		papyrus->Register(ActorExt::RegisterFuncs);
-		_MESSAGE("Registered iEquip_ActorExt");
+        papyrus->Register(ActorExt::RegisterFuncs);
+        logger::info("Registered iEquip_ActorExt");
 
-		papyrus->Register(AmmoExt::RegisterFuncs);
-		_MESSAGE("Registered iEquip_AmmoExt");
+        papyrus->Register(AmmoExt::RegisterFuncs);
+        logger::info("Registered iEquip_AmmoExt");
 
-		papyrus->Register(FormExt::RegisterFuncs);
-		_MESSAGE("Registered iEquip_FormExt");
+        papyrus->Register(FormExt::RegisterFuncs);
+        logger::info("Registered iEquip_FormExt");
 
-		papyrus->Register(InventoryExt::RegisterFuncs);
-		_MESSAGE("Registered iEquip_InventoryExt");
+        papyrus->Register(InventoryExt::RegisterFuncs);
+        logger::info("Registered iEquip_InventoryExt");
 
-		papyrus->Register(LightExt::RegisterFuncs);
-		_MESSAGE("Registered iEquip_LightExt");
+        papyrus->Register(LightExt::RegisterFuncs);
+        logger::info("Registered iEquip_LightExt");
 
-		papyrus->Register(MagicEffectExt::RegisterFuncs);
-		_MESSAGE("Registered iEquip_MagicEffectExt");
-		
-		papyrus->Register(ObjectReferenceExt::RegisterFuncs);
-		_MESSAGE("Registered iEquip_ObjectReferenceExt");
+        papyrus->Register(MagicEffectExt::RegisterFuncs);
+        logger::info("Registered iEquip_MagicEffectExt");
 
-		papyrus->Register(SoulSeeker::RegisterFuncs);
-		_MESSAGE("Registered iEquip_SoulSeeker");
+        papyrus->Register(ObjectReferenceExt::RegisterFuncs);
+        logger::info("Registered iEquip_ObjectReferenceExt");
 
-		papyrus->Register(SpellExt::RegisterFuncs);
-		_MESSAGE("Registered iEquip_SpellExt");
+        papyrus->Register(SoulSeeker::RegisterFuncs);
+        logger::info("Registered iEquip_SoulSeeker");
 
-		papyrus->Register(StringExt::RegisterFuncs);
-		_MESSAGE("Registered iEquip_StringExt");
+        papyrus->Register(SpellExt::RegisterFuncs);
+        logger::info("Registered iEquip_SpellExt");
 
-		papyrus->Register(UIExt::RegisterFuncs);
-		_MESSAGE("Registered iEquip_UIExt");
+        papyrus->Register(StringExt::RegisterFuncs);
+        logger::info("Registered iEquip_StringExt");
 
-		papyrus->Register(WeaponExt::RegisterFuncs);
-		_MESSAGE("Registered iEquip_WeaponExt");
-	}
+        papyrus->Register(UIExt::RegisterFuncs);
+        logger::info("Registered iEquip_UIExt");
+
+        papyrus->Register(WeaponExt::RegisterFuncs);
+        logger::info("Registered iEquip_WeaponExt");
+    }
 }

@@ -5,8 +5,6 @@
 #include <regex>
 #include <string>
 
-#include "RE/Skyrim.h"
-
 #include "Json2Settings.h"
 
 

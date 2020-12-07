@@ -59,19 +59,19 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)..;$(ProjectDir)include;$(SolutionDir)CommonLibSSE\include;$(SolutionDir)Json2Settings\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)..;$(ProjectDir)include;$(SolutionDir)CommonLibSSE\include;$(SolutionDir)Json2Settings\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;PLUGIN_EXAMPLE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
-      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <WarningLevel>Level3</WarningLevel>
+      <WarningLevel>Level4</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <UseFullPaths>false</UseFullPaths>
       <CompileAs>CompileAsCpp</CompileAs>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <DisableSpecificWarnings>
       </DisableSpecificWarnings>
-      <TreatWarningAsError>true</TreatWarningAsError>
+      <TreatWarningAsError>false</TreatWarningAsError>
       <UndefinePreprocessorDefinitions>
       </UndefinePreprocessorDefinitions>
       <EnforceTypeConversionRules>true</EnforceTypeConversionRules>
@@ -80,12 +80,13 @@
       <ControlFlowGuard>Guard</ControlFlowGuard>
       <FloatingPointExceptions>true</FloatingPointExceptions>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <ConformanceMode>true</ConformanceMode>
     </ClCompile>
     <Link>
       <ModuleDefinitionFile>exports.def</ModuleDefinitionFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
-      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies);Version.lib</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
       <Command>
@@ -149,6 +150,7 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <None Include=".clang-format" />
     <None Include="exports.def" />
   </ItemGroup>
   <ItemGroup>
@@ -156,6 +158,7 @@
     <ClCompile Include="src\AmmoExt.cpp" />
     <ClCompile Include="src\Events.cpp" />
     <ClCompile Include="src\FormExt.cpp" />
+    <ClCompile Include="src\HashUtil.cpp" />
     <ClCompile Include="src\Hooks.cpp" />
     <ClCompile Include="src\InventoryExt.cpp" />
     <ClCompile Include="src\LightExt.cpp" />
@@ -182,6 +185,7 @@
     <ClInclude Include="include\AmmoExt.h" />
     <ClInclude Include="include\Events.h" />
     <ClInclude Include="include\FormExt.h" />
+    <ClInclude Include="include\HashUtil.h" />
     <ClInclude Include="include\Hooks.h" />
     <ClInclude Include="include\InventoryExt.h" />
     <ClInclude Include="include\LightExt.h" />
@@ -204,10 +208,10 @@
     <ResourceCompile Include="version.rc" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="CommonLibSSE\CommonLibSSE.vcxproj">
+    <ProjectReference Include="..\CommonLibSSE\CommonLibSSE.vcxproj">
       <Project>{3e4b6ef3-ec6e-46cf-9003-eeb57a258b82}</Project>
     </ProjectReference>
-    <ProjectReference Include="Json2Settings\Json2Settings.vcxproj">
+    <ProjectReference Include="..\Json2Settings\Json2Settings.vcxproj">
       <Project>{00e04e24-e02f-43c5-a52c-00daec8f1671}</Project>
     </ProjectReference>
   </ItemGroup>

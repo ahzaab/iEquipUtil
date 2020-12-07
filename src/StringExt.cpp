@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "StringExt.h"
 
-#include "skse64/HashUtil.h"
+#include "HashUtil.h"
 
 #include <cstdio>
 #include <cstring>
@@ -13,7 +13,7 @@ namespace StringExt
 {
 	uint32_t CalcCRC32Hash(RE::StaticFunctionTag*, RE::BSFixedString a_str, uint32_t a_start)
 	{
-		return HashUtil::CRC32(a_str.c_str(), a_start);
+		return SKSE::HashUtil::CRC32(a_str.c_str(), a_start);
 	}
 
 
