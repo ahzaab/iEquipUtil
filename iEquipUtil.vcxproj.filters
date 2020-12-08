@@ -43,9 +43,6 @@
     <ClCompile Include="src\RefHandleManager.cpp">
       <Filter>src\lib</Filter>
     </ClCompile>
-    <ClCompile Include="src\InventoryExt.cpp">
-      <Filter>src\papyrus</Filter>
-    </ClCompile>
     <ClCompile Include="src\ObjectReferenceExt.cpp">
       <Filter>src\papyrus</Filter>
     </ClCompile>
@@ -66,6 +63,9 @@
     </ClCompile>
     <ClCompile Include="src\HashUtil.cpp">
       <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\InventoryExt.cpp">
+      <Filter>src\papyrus</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -135,9 +135,6 @@
     <ClInclude Include="include\RefHandleManager.h">
       <Filter>include\lib</Filter>
     </ClInclude>
-    <ClInclude Include="include\InventoryExt.h">
-      <Filter>include\papyrus</Filter>
-    </ClInclude>
     <ClInclude Include="include\ObjectReferenceExt.h">
       <Filter>include\papyrus</Filter>
     </ClInclude>
@@ -158,6 +155,9 @@
     </ClInclude>
     <ClInclude Include="include\HashUtil.h">
       <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\InventoryExt.h">
+      <Filter>include\papyrus</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

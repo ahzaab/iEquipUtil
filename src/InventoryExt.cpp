@@ -166,54 +166,6 @@ namespace InventoryExt
 
             return true;
         }
-
-        auto GetInventory(RE::TESObjectREFR* a_object, std::function<bool(RE::TESBoundObject*)> a_filter)
-            -> RE::TESObjectREFR::InventoryItemMap
-        {
-            // a version of GetInventory without smart pointers that injects the items into InventoryChanges like old iEquipUtil,
-            // because for some reason that works
-            RE::TESObjectREFR::InventoryItemMap results;
-
-            auto invChanges = a_object->GetInventoryChanges();
-            if (invChanges && invChanges->entryList) {
-                for (auto& entry : *invChanges->entryList) {
-                    if (entry && entry->object && a_filter(entry->object)) {
-                        auto mapped = std::make_pair(entry->countDelta, entry);
-                        auto it = results.insert(std::make_pair(entry->object, mapped));
-                        assert(it.second);
-                    }
-                }
-            }
-
-            auto container = a_object->GetContainer();
-            if (container) {
-                container->ForEachContainerObject([&](RE::ContainerObject& a_entry) -> bool {
-                    if (a_entry.obj && a_filter(a_entry.obj)) {
-                        auto it = results.find(a_entry.obj);
-                        if (it == results.end()) {
-                            auto entryData = new RE::InventoryEntryData(a_entry.obj, 0);
-                            auto mapped = std::make_pair(a_entry.count, entryData);
-                            auto insIt = results.insert(std::make_pair(a_entry.obj, mapped));
-                            invChanges->AddEntryData(entryData);  // added this
-                            assert(insIt.second);
-                        } else {
-                            it->second.first += a_entry.count;
-                        }
-                    }
-                    return true;
-                });
-            }
-
-            return results;
-        }
-
-        auto GetInventory(RE::TESObjectREFR* a_object)
-            -> RE::TESObjectREFR::InventoryItemMap
-        {
-            return GetInventory(a_object, []([[maybe_unused]] RE::TESBoundObject*) -> bool {
-                return true;
-            });
-        }
     }
 
 
@@ -483,8 +435,8 @@ namespace InventoryExt
                 case XEquipSlot::kGloves:
                 case XEquipSlot::kShield:
                 {
-                    auto armor = static_cast<RE::TESObjectARMO&>(a_object);
-                    return armor.HasPartOf(fpFlag);
+                    auto armor = a_object.As<RE::TESObjectARMO>();
+                    return armor->HasPartOf(fpFlag);
                 }
                 default:
                     return true;
@@ -544,8 +496,8 @@ namespace InventoryExt
         task->AddTask([]() -> void {
             auto manager = RefHandleManager::GetSingleton();
             auto player = RE::PlayerCharacter::GetSingleton();
-            auto inv = GetInventory(player, [&](RE::TESBoundObject* a_object) -> bool {
-                return manager->IsTrackedType(a_object);
+            auto inv = player->GetInventory([&](RE::TESBoundObject& a_object) -> bool {
+                return manager->IsTrackedType(&a_object);
             });
 
             for (auto& elem : inv) {

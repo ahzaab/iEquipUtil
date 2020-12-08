@@ -220,6 +220,13 @@ extern "C"
 
     bool SKSEPlugin_Load(const SKSE::LoadInterface* a_skse)
     {
+        //while (!IsDebuggerPresent()) {
+        //    Sleep(10);
+        //}
+
+        //Sleep(1000 * 2);
+
+
         try {
             logger::info("iEquipUtil loaded");
 

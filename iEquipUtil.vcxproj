@@ -208,10 +208,11 @@
     <ResourceCompile Include="version.rc" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\CommonLibSSE\CommonLibSSE.vcxproj">
+    <ProjectReference Include="CommonLibSSE\CommonLibSSE.vcxproj">
       <Project>{3e4b6ef3-ec6e-46cf-9003-eeb57a258b82}</Project>
+      <UseLibraryDependencyInputs>false</UseLibraryDependencyInputs>
     </ProjectReference>
-    <ProjectReference Include="..\Json2Settings\Json2Settings.vcxproj">
+    <ProjectReference Include="Json2Settings\Json2Settings.vcxproj">
       <Project>{00e04e24-e02f-43c5-a52c-00daec8f1671}</Project>
     </ProjectReference>
   </ItemGroup>
