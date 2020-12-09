@@ -181,7 +181,7 @@ auto RefHandleManager::LookupEntry(RE::TESForm* a_item, RefHandle a_handle)
 
     auto player = RE::PlayerCharacter::GetSingleton();
     auto inv = player->GetInventory([&](RE::TESBoundObject& a_object) -> bool {
-        return a_object.formType == object->formType;
+        return std::addressof(a_object) == object;
     });
 
     auto invIt = inv.find(object);

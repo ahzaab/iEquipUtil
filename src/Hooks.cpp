@@ -22,9 +22,9 @@ namespace Hooks
             static void InstallHooks()
             {
                 REL::Relocation<std::uintptr_t> vTable(RE::Offset::PlayerCharacter::Vtbl);
-                _RemoveItem = vTable.write_vfunc(0x8 * 0x56, &PlayerCharacterEx::Hook_RemoveItem);
-                _AddObjectToContainer = vTable.write_vfunc(0x8 * 0x5A, &PlayerCharacterEx::Hook_AddObjectToContainer);
-                _PickUpObject = vTable.write_vfunc(0x8 * 0xCC, &PlayerCharacterEx::Hook_PickUpObject);
+                _RemoveItem = vTable.write_vfunc(0x56, &PlayerCharacterEx::Hook_RemoveItem);
+                _AddObjectToContainer = vTable.write_vfunc(0x5A, &PlayerCharacterEx::Hook_AddObjectToContainer);
+                _PickUpObject = vTable.write_vfunc(0xCC, &PlayerCharacterEx::Hook_PickUpObject);
 
                 logger::info("Installed hooks for ({})"sv, typeid(PlayerCharacterEx).name());
             }
