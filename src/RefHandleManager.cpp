@@ -304,6 +304,11 @@ auto RefHandleManager::ActivateAndDispatch(const RE::TESForm* a_item, RE::ExtraD
         a_extraList.Add(xID);
     }
 
+#ifndef NDEBUG
+    auto name = a_item->As<RE::TESFullName>()->GetFullName();
+    logger::trace("ActivateAndDispatch: item:{}, id:{}, count:{}, handle:{}"sv, name, xID->uniqueID, a_count, a_handle);
+#endif
+
     _idToHandleMap.insert({ xID->uniqueID, a_handle });
     _handleToIDMap.insert({ a_handle, xID->uniqueID });
 

@@ -489,9 +489,45 @@ namespace InventoryExt
         }
     }
 
+    void InitializeInventory([[maybe_unused]] VM* a_vm, [[maybe_unused]] StackID a_stackID, RE::StaticFunctionTag*)
+    {
+        auto task = SKSE::GetTaskInterface();
+        task->AddTask([]() -> void {
+            auto manager = RefHandleManager::GetSingleton();
+            auto player = RE::PlayerCharacter::GetSingleton();
+            auto invChanges = player->GetInventoryChanges();
+            auto inv = player->GetInventory([&](RE::TESBoundObject& a_object) -> bool {
+                return manager->IsTrackedType(&a_object);
+            });
+
+
+            for (auto& elem : inv) {
+                auto  item = elem.first;
+                auto  rawCount = elem.second.first;
+                auto& entryData = elem.second.second;
+
+                while (rawCount-- > 0) {
+                    if (std::find_if(invChanges->entryList->begin(), invChanges->entryList->end(), [item](const RE::InventoryEntryData* arg) {
+                            return arg->GetObject() == item;
+                        }) == invChanges->entryList->end()) {
+                        auto entry = new RE::InventoryEntryData(item->As<RE::TESBoundObject>(), 0);
+
+                        invChanges->AddEntryData(entry);
+                        if (entry->extraLists->empty()) {
+                            auto xList = new RE::ExtraDataList();
+                            //xList->SetInventoryChanges(invChanges);
+                            entry->extraLists->push_front(xList);
+                        }
+                    }
+                }
+            }
+        });
+    }
+
 
     void ParseInventory([[maybe_unused]] VM* a_vm, [[maybe_unused]] StackID a_stackID, RE::StaticFunctionTag*)
     {
+        InventoryExt::InitializeInventory(a_vm, a_stackID, nullptr);
         auto task = SKSE::GetTaskInterface();
         task->AddTask([]() -> void {
             auto manager = RefHandleManager::GetSingleton();
@@ -499,6 +535,7 @@ namespace InventoryExt
             auto inv = player->GetInventory([&](RE::TESBoundObject& a_object) -> bool {
                 return manager->IsTrackedType(&a_object);
             });
+
 
             for (auto& elem : inv) {
                 auto  item = elem.first;

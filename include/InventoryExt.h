@@ -23,6 +23,7 @@ namespace InventoryExt
     uint32_t             GetRefHandleFromWornObject(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, uint32_t a_equipSlot);
     RE::BSFixedString    GetShortName(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, RE::TESForm* a_item, uint32_t a_refHandle);
     void                 ParseInventory(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*);
+    void                 InitializeInventory(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*);
     void                 RemovePoison(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, RE::TESForm* a_item, uint32_t a_refHandle);
     void                 SetPoison(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, RE::TESForm* a_item, uint32_t a_refHandle, RE::AlchemyItem* a_newPoison, uint32_t a_newCount);
     void                 SetPoisonCount(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, RE::TESForm* a_item, uint32_t a_refHandle, uint32_t a_newCount);
