@@ -15,6 +15,7 @@
 
 #include "SKSE/API.h"
 
+#include "InventoryExt.h"
 
 namespace
 {
@@ -133,6 +134,7 @@ namespace
 
     void MessageHandler(SKSE::MessagingInterface::Message* a_msg)
     {
+        logger::trace("MessageHandler: {}"sv, a_msg->type);
         switch (a_msg->type) {
         case SKSE::MessagingInterface::kDataLoaded:
         {
@@ -150,6 +152,10 @@ namespace
 
             auto locManager = LocaleManager::GetSingleton();
             locManager->LoadLocalizationStrings();
+        } break;
+        case SKSE::MessagingInterface::kPostLoadGame:
+        {
+            //InventoryExt::InitializeInventory(nullptr, 0, nullptr);
         } break;
         }
     }
