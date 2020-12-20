@@ -220,6 +220,10 @@ bool RefHandleManager::IsTrackedType(const RE::TESForm* a_form) const
 
     switch (a_form->GetFormType()) {
     case RE::FormType::Armor:
+    {
+        auto asArmor = a_form->As<RE::TESObjectARMO>();
+        return asArmor ? asArmor->IsShield() : true;
+    }
     case RE::FormType::Weapon:
         return true;
     default:
@@ -305,6 +309,7 @@ auto RefHandleManager::ActivateAndDispatch(const RE::TESForm* a_item, RE::ExtraD
     }
 
 #ifndef NDEBUG
+    auto invChange = RE::PlayerCharacter::GetSingleton()->GetInventoryChanges();
     auto name = a_item->As<RE::TESFullName>()->GetFullName();
     logger::trace("ActivateAndDispatch: item:{}, id:{}, count:{}, handle:{}"sv, name, xID->uniqueID, a_count, a_handle);
 #endif

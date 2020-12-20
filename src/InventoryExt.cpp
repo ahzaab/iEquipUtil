@@ -515,8 +515,23 @@ namespace InventoryExt
                         invChanges->AddEntryData(entry);
                         if (entry->extraLists->empty()) {
                             auto xList = new RE::ExtraDataList();
-                            //xList->SetInventoryChanges(invChanges);
                             entry->extraLists->push_front(xList);
+                        }
+                    } else {
+                        auto it = (std::find_if(invChanges->entryList->begin(), invChanges->entryList->end(), [item](const RE::InventoryEntryData* arg) {
+                            return arg->GetObject() == item;
+                        }));
+
+                        if (it != invChanges->entryList->end()) {
+                            auto entry = *it;
+
+                            if (!entry->extraLists) {
+                                entry->AddExtraList(new RE::ExtraDataList());
+                            }
+                            if (entry->extraLists->empty()) {
+                                auto xList = new RE::ExtraDataList();
+                                entry->extraLists->push_front(xList);
+                            }
                         }
                     }
                 }
