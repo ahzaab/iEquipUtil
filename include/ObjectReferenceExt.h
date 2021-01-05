@@ -1,7 +1,5 @@
 #pragma once
 
-#include "RE/Skyrim.h"
-
 
 namespace ObjectReferenceExt
 {
@@ -10,8 +8,8 @@ namespace ObjectReferenceExt
 	using Severity = RE::BSScript::ErrorLogger::Severity;
 
 
-	RE::TESForm*	GetNthFormOfType(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, RE::TESObjectREFR* a_container, UInt32 a_type, UInt32 a_n);
-	SInt32			GetNumItemsOfType(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, RE::TESObjectREFR* a_container, UInt32 a_type);
+	RE::TESForm*	GetNthFormOfType(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, RE::TESObjectREFR* a_container, uint32_t a_type, uint32_t a_n);
+	int32_t			GetNumItemsOfType(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, RE::TESObjectREFR* a_container, uint32_t a_type);
 
 	bool RegisterFuncs(VM* a_vm);
 }

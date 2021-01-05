@@ -43,9 +43,6 @@
     <ClCompile Include="src\RefHandleManager.cpp">
       <Filter>src\lib</Filter>
     </ClCompile>
-    <ClCompile Include="src\InventoryExt.cpp">
-      <Filter>src\papyrus</Filter>
-    </ClCompile>
     <ClCompile Include="src\ObjectReferenceExt.cpp">
       <Filter>src\papyrus</Filter>
     </ClCompile>
@@ -61,9 +58,19 @@
     <ClCompile Include="src\MagicEffectExt.cpp">
       <Filter>src\papyrus</Filter>
     </ClCompile>
+    <ClCompile Include="src\PCH.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\HashUtil.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\InventoryExt.cpp">
+      <Filter>src\papyrus</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="exports.def" />
+    <None Include=".clang-format" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">
@@ -128,9 +135,6 @@
     <ClInclude Include="include\RefHandleManager.h">
       <Filter>include\lib</Filter>
     </ClInclude>
-    <ClInclude Include="include\InventoryExt.h">
-      <Filter>include\papyrus</Filter>
-    </ClInclude>
     <ClInclude Include="include\ObjectReferenceExt.h">
       <Filter>include\papyrus</Filter>
     </ClInclude>
@@ -144,6 +148,15 @@
       <Filter>include\papyrus</Filter>
     </ClInclude>
     <ClInclude Include="include\MagicEffectExt.h">
+      <Filter>include\papyrus</Filter>
+    </ClInclude>
+    <ClInclude Include="include\PCH.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\HashUtil.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\InventoryExt.h">
       <Filter>include\papyrus</Filter>
     </ClInclude>
   </ItemGroup>

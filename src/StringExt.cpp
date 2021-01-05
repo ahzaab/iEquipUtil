@@ -1,6 +1,7 @@
+#include "pch.h"
 #include "StringExt.h"
 
-#include "skse64/HashUtil.h"
+#include "HashUtil.h"
 
 #include <cstdio>
 #include <cstring>
@@ -10,13 +11,13 @@
 
 namespace StringExt
 {
-	UInt32 CalcCRC32Hash(RE::StaticFunctionTag*, RE::BSFixedString a_str, UInt32 a_start)
+	uint32_t CalcCRC32Hash(RE::StaticFunctionTag*, RE::BSFixedString a_str, uint32_t a_start)
 	{
-		return HashUtil::CRC32(a_str.c_str(), a_start);
+		return SKSE::HashUtil::CRC32(a_str.c_str(), a_start);
 	}
 
 
-	RE::BSFixedString IntToHexString(RE::StaticFunctionTag*, UInt32 a_num)
+	RE::BSFixedString IntToHexString(RE::StaticFunctionTag*, uint32_t a_num)
 	{
 		char buf[] = "DEADBEEF";
 		std::snprintf(buf, sizeof(buf), "%08X", a_num);

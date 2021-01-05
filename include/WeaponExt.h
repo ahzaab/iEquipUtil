@@ -1,8 +1,5 @@
 #pragma once
 
-#include "RE/Skyrim.h"
-
-
 namespace WeaponExt
 {
 	using VM = RE::BSScript::IVirtualMachine;

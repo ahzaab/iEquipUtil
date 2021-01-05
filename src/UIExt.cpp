@@ -1,9 +1,10 @@
+#include "pch.h"
 #include "UIExt.h"
 
 
 namespace UIExt
 {
-	RE::TESForm* GetFormAtInventoryIndex(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, UInt32 a_index)
+	RE::TESForm* GetFormAtInventoryIndex(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, uint32_t a_index)
 	{
 		auto ui = RE::UI::GetSingleton();
 		auto invMenu = ui->GetMenu<RE::InventoryMenu>();

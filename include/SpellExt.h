@@ -1,6 +1,5 @@
 #pragma once
 
-#include "RE/Skyrim.h"
 
 
 namespace SpellExt
@@ -10,7 +9,7 @@ namespace SpellExt
 	using Severity = RE::BSScript::ErrorLogger::Severity;
 
 
-	SInt32	GetBoundSpellWeapType(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, const RE::SpellItem* a_spell);
+	int32_t	GetBoundSpellWeapType(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, const RE::SpellItem* a_spell);
 	bool	IsBoundSpell(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, const RE::SpellItem* a_spell);
 	bool	IsHealingSpell(VM* a_vm, StackID a_stackID, RE::StaticFunctionTag*, const RE::SpellItem* a_spell);
 
