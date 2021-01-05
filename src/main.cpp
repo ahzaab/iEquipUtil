@@ -160,7 +160,7 @@ extern "C"
 {
     bool SKSEPlugin_Query(const SKSE::QueryInterface* a_skse, SKSE::PluginInfo* a_info)
     {
-        std::setlocale(LC_ALL, "");
+        //std::setlocale(LC_ALL, "");
 
         try {
 #ifndef NDEBUG
