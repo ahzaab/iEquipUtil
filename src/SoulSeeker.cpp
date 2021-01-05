@@ -188,7 +188,13 @@ namespace SoulSeeker
                         if (xSoul) {
                             auto soulSize = xSoul->GetContainedSoul();
                             considerGem({ gemSize, soulSize, entryData.get(), xList });
+                        } else  // Its possible that the soul gem does not have "ExtraSoul" data but still have extra data e.g "ExtraOwnership" (Stolen)
+                        {
+                            auto baseSoulSize = soulGem->GetContainedSoul();
+                            considerGem({ gemSize, baseSoulSize, entryData.get(), xList });
                         }
+
+
                         rawCount -= xList->GetCount();
                     }
                 }
