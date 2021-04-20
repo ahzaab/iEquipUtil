@@ -110,13 +110,13 @@ namespace Hooks
                 if (a_count <= 0 || !a_object || !a_object->GetBaseObject() || !manager->IsInit() || !manager->IsTrackedType(a_object->GetBaseObject()) /* || a_object->HasVMAD() */) {
                     return _PickUpObject(this, a_object, a_count, a_arg3, a_playSound);
                 }
-
+                _PickUpObject(this, a_object, a_count, a_arg3, a_playSound);
                 auto countLeft = a_count;
 
                 auto count = a_object->extraList.GetCount();
                 countLeft -= count;
                 manager->ActivateAndDispatch(a_object->GetBaseObject(), a_object->extraList, count);
-                _PickUpObject(this, a_object, count, a_arg3, a_playSound);
+                //_PickUpObject(this, a_object, count, a_arg3, a_playSound);
 
                 while (countLeft-- > 0) {
                     _AddObjectToContainer(this, a_object->GetBaseObject(), nullptr, 1, nullptr);
